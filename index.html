@@ -404,6 +404,28 @@ displayHomework();
 updateStreakDisplay();
 
 </script>
+<script type="module">
+  // Import Firebase core
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
+  import { getAuth } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
 
+  // Your Firebase configuration
+  const firebaseConfig = {
+    apiKey: "AIzaSyBvxAsbhzV_XwEkmPTBNSchgapkSU2NFUI",
+    authDomain: "homework-tracker-global.firebaseapp.com",
+    projectId: "homework-tracker-global",
+    storageBucket: "homework-tracker-global.firebasestorage.app",
+    messagingSenderId: "801681205060",
+    appId: "1:801681205060:web:bbaa8fadd867a32edf9911"
+  };
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+
+  // Initialize Authentication
+  const auth = getAuth(app);
+
+  console.log("Firebase connected successfully 🔥");
+</script>
 </body>
 </html>
