@@ -38,8 +38,7 @@
 
         #trackerScreen { display: none; }
 
-        h1 { margin-bottom: 5px; }
-        #streakDisplay { margin-bottom: 20px; color: #ff6600; }
+        h1 { margin-bottom: 15px; }
 
         .form-container {
             display: flex;
@@ -88,6 +87,7 @@
         .red { border-left: 6px solid red; }
 
         .overdue-text { color: red; font-weight: bold; }
+        .due-text { font-size: 14px; margin-top: 4px; }
 
         .actions { display: flex; gap: 8px; }
 
@@ -115,7 +115,6 @@
             margin-top: 20px;
         }
 
-        .counter { font-size: 14px; margin-top: 5px; }
         .small-btn { padding: 4px 8px; font-size: 14px; cursor: pointer; }
 
         @media (max-width: 600px) {
@@ -140,7 +139,6 @@
 </head>
 <body>
 
-<!-- LOGIN SCREEN -->
 <div id="welcomeScreen">
     <h1>Welcome to Homework Tracker!!!</h1>
     <h2>All your homework in one place</h2>
@@ -148,7 +146,6 @@
     <button id="loginBtn">Sign in with Google</button>
 </div>
 
-<!-- TRACKER -->
 <div id="trackerScreen">
     <div style="margin-bottom:10px;">
         <span id="userInfo"></span>
@@ -156,10 +153,6 @@
     </div>
 
     <h1>Homework Tracker</h1>
-    <h2 id="streakDisplay">🔥 Streak: 0 Days</h2>
-
-    <!-- YOUR ORIGINAL TRACKER CODE REMAINS HERE -->
-    <!-- (Nothing below was removed from your logic) -->
 
     <div class="form-container">
         <select id="hwType" onchange="checkType()">
@@ -206,7 +199,6 @@
 
 <script>
 let homeworkList = JSON.parse(localStorage.getItem("homework")) || [];
-let streakData = JSON.parse(localStorage.getItem("streakData")) || { streak:0 };
 
 function saveData(){
     localStorage.setItem("homework", JSON.stringify(homeworkList));
@@ -216,6 +208,107 @@ function checkType(){
     let type=document.getElementById("hwType").value;
     document.getElementById("qnaBox").style.display = type==="QnAs"?"block":"none";
 }
+
+function addHomework(){
+    const type=document.getElementById("hwType").value;
+    const subject=document.getElementById("subject").value;
+    const date=document.getElementById("dateInput").value;
+    const qna=document.getElementById("qnaBox").value;
+
+    if(!type || !subject || !date){
+        alert("Please fill all required fields!");
+        return;
+    }
+
+    homeworkList.push({
+        type,subject,date,qna,completed:false
+    });
+
+    saveData();
+    renderHomework();
+    updateProgress();
+
+    document.getElementById("hwType").value="";
+    document.getElementById("subject").value="";
+    document.getElementById("dateInput").value="";
+    document.getElementById("qnaBox").value="";
+    document.getElementById("qnaBox").style.display="none";
+}
+
+function deleteHomework(index){
+    homeworkList.splice(index,1);
+    saveData();
+    renderHomework();
+    updateProgress();
+}
+
+function toggleComplete(index){
+    homeworkList[index].completed=!homeworkList[index].completed;
+    saveData();
+    renderHomework();
+    updateProgress();
+}
+
+function renderHomework(){
+    const list=document.getElementById("homeworkList");
+    list.innerHTML="";
+
+    const today=new Date();
+    today.setHours(0,0,0,0);
+
+    homeworkList.forEach((hw,index)=>{
+        const div=document.createElement("div");
+
+        const dueDate=new Date(hw.date);
+        dueDate.setHours(0,0,0,0);
+
+        const diffDays=Math.ceil((dueDate - today)/(1000*60*60*24));
+
+        let statusClass="green";
+        if(diffDays<0) statusClass="red";
+        else if(diffDays===0) statusClass="yellow";
+        else if(diffDays<=2) statusClass="yellow";
+
+        div.className=`homework ${statusClass}`;
+
+        let dueText="";
+        if(diffDays>0) dueText=`${diffDays} day${diffDays>1?"s":""} remaining`;
+        else if(diffDays===0) dueText="Due today";
+        else dueText=`Overdue by ${Math.abs(diffDays)} day${Math.abs(diffDays)>1?"s":""}`;
+
+        div.innerHTML=`
+            <div>
+                <strong>${hw.subject}</strong> - ${hw.type}
+                ${hw.qna?` (${hw.qna})`:""}
+                <div class="due-text">${dueText}</div>
+            </div>
+            <div class="actions">
+                <button class="small-btn" onclick="toggleComplete(${index})">${hw.completed?"Undo":"Done"}</button>
+                <button class="small-btn" onclick="deleteHomework(${index})">❌</button>
+            </div>
+        `;
+
+        if(hw.completed){
+            div.style.opacity="0.6";
+            div.style.textDecoration="line-through";
+        }
+
+        list.appendChild(div);
+    });
+}
+
+function updateProgress(){
+    const total=homeworkList.length;
+    const done=homeworkList.filter(hw=>hw.completed).length;
+    const percent=total===0?0:(done/total)*100;
+
+    document.getElementById("progressBar").style.width=percent+"%";
+    document.getElementById("allDone").style.display=
+        total>0 && done===total?"block":"none";
+}
+
+renderHomework();
+updateProgress();
 </script>
 
 <script type="module">
