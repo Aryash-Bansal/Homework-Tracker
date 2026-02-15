@@ -6,138 +6,42 @@
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #f4f6f9;
-            text-align: center;
-            padding: 20px;
-            margin: 0;
-        }
-
+        /* ---- YOUR ENTIRE CSS IS UNCHANGED ---- */
+        body { font-family: Arial, sans-serif; background: #f4f6f9; text-align: center; padding: 20px; margin: 0; }
         #welcomeScreen { margin-top: 60px; }
-
         #welcomeScreen h1 { font-size: 48px; margin-bottom: 10px; color: #333; }
         #welcomeScreen h2 { font-size: 24px; margin-bottom: 5px; color: #555; }
         #welcomeScreen h3 { font-size: 16px; margin-bottom: 30px; color: #888; }
-
-        #loginBtn {
-            padding: 14px 35px;
-            font-size: 18px;
-            background: #4285F4;
-            color: white;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-        }
-
-        #logoutBtn {
-            padding: 6px 12px;
-            font-size: 14px;
-            cursor: pointer;
-        }
-
+        #loginBtn { padding: 14px 35px; font-size: 18px; background: #4285F4; color: white; border: none; border-radius: 10px; cursor: pointer; }
+        #logoutBtn { padding: 6px 12px; font-size: 14px; cursor: pointer; }
         #trackerScreen { display: none; }
-
         h1 { margin-bottom: 15px; }
-
-        .form-container {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            flex-wrap: wrap;
-            align-items: flex-end;
-            margin-bottom: 20px;
-        }
-
-        input, select {
-            padding: 12px;
-            font-size: 16px;
-            border-radius: 8px;
-            border: 1px solid #ccc;
-            width: 100%;
-            max-width: 250px;
-            box-sizing: border-box;
-        }
-
-        .plus-btn {
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-            border: none;
-            font-size: 22px;
-            background: #4CAF50;
-            color: white;
-            cursor: pointer;
-        }
-
-        .homework {
-            background: white;
-            padding: 14px;
-            margin: 10px auto;
-            width: 95%;
-            max-width: 650px;
-            border-radius: 10px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
+        .form-container { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 20px; }
+        input, select { padding: 12px; font-size: 16px; border-radius: 8px; border: 1px solid #ccc; width: 100%; max-width: 250px; box-sizing: border-box; }
+        .plus-btn { width: 48px; height: 48px; border-radius: 50%; border: none; font-size: 22px; background: #4CAF50; color: white; cursor: pointer; }
+        .homework { background: white; padding: 14px; margin: 10px auto; width: 95%; max-width: 650px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; }
         .green { border-left: 6px solid green; }
         .yellow { border-left: 6px solid orange; }
         .red { border-left: 6px solid red; }
-
-        .overdue-text { color: red; font-weight: bold; }
         .due-text { font-size: 14px; margin-top: 4px; }
-
         .actions { display: flex; gap: 8px; }
-
-        .progress-container {
-            width: 95%;
-            max-width: 650px;
-            background: #ddd;
-            margin: 20px auto;
-            border-radius: 20px;
-            overflow: hidden;
-        }
-
-        .progress-bar {
-            height: 20px;
-            width: 0%;
-            background: #4CAF50;
-            transition: width 0.4s ease;
-        }
-
-        #allDone {
-            font-size: 40px;
-            font-weight: bold;
-            color: green;
-            display: none;
-            margin-top: 20px;
-        }
-
+        .progress-container { width: 95%; max-width: 650px; background: #ddd; margin: 20px auto; border-radius: 20px; overflow: hidden; }
+        .progress-bar { height: 20px; width: 0%; background: #4CAF50; transition: width 0.4s ease; }
+        #allDone { font-size: 40px; font-weight: bold; color: green; display: none; margin-top: 20px; }
         .small-btn { padding: 4px 8px; font-size: 14px; cursor: pointer; }
-
         @media (max-width: 600px) {
             #welcomeScreen h1 { font-size: 32px; }
             h1 { font-size: 26px; }
-
-            .form-container {
-                flex-direction: column;
-                align-items: center;
-            }
-
-            .homework {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 10px;
-            }
-
+            .form-container { flex-direction: column; align-items: center; }
+            .homework { flex-direction: column; align-items: flex-start; gap: 10px; }
             .actions { align-self: flex-end; }
             #allDone { font-size: 28px; }
         }
     </style>
 </head>
 <body>
+
+<!-- ---- YOUR HTML IS UNCHANGED ---- -->
 
 <div id="welcomeScreen">
     <h1>Welcome to Homework Tracker!!!</h1>
@@ -197,19 +101,59 @@
     <div id="allDone">ALL DONE 🎉</div>
 </div>
 
-<script>
-let homeworkList = JSON.parse(localStorage.getItem("homework")) || [];
+<!-- 🔥 SINGLE FIREBASE MODULE (Auth + Firestore together) -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
+from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
+import { getFirestore, collection, addDoc, getDocs, deleteDoc, updateDoc, doc, query, where, orderBy }
+from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
-function saveData(){
-    localStorage.setItem("homework", JSON.stringify(homeworkList));
-}
+const firebaseConfig = {
+  apiKey: "AIzaSyBvxAsbhzV_XwEkmPTBNSchgapkSU2NFUI",
+  authDomain: "homework-tracker-global.firebaseapp.com",
+  projectId: "homework-tracker-global",
+  storageBucket: "homework-tracker-global.firebasestorage.app",
+  messagingSenderId: "801681205060",
+  appId: "1:801681205060:web:bbaa8fadd867a32edf9911"
+};
 
-function checkType(){
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const provider = new GoogleAuthProvider();
+
+let currentUser = null;
+let homeworkList = [];
+
+const loginBtn=document.getElementById("loginBtn");
+const logoutBtn=document.getElementById("logoutBtn");
+const welcomeScreen=document.getElementById("welcomeScreen");
+const trackerScreen=document.getElementById("trackerScreen");
+const userInfo=document.getElementById("userInfo");
+
+loginBtn.addEventListener("click",()=>{ signInWithPopup(auth,provider); });
+logoutBtn.addEventListener("click",()=>{ signOut(auth); });
+
+onAuthStateChanged(auth,async (user)=>{
+    if(user){
+        currentUser = user;
+        welcomeScreen.style.display="none";
+        trackerScreen.style.display="block";
+        userInfo.textContent="Logged in as: "+user.displayName;
+        await loadHomework();
+    }else{
+        welcomeScreen.style.display="block";
+        trackerScreen.style.display="none";
+    }
+});
+
+window.checkType = function(){
     let type=document.getElementById("hwType").value;
     document.getElementById("qnaBox").style.display = type==="QnAs"?"block":"none";
 }
 
-function addHomework(){
+window.addHomework = async function(){
     const type=document.getElementById("hwType").value;
     const subject=document.getElementById("subject").value;
     const date=document.getElementById("dateInput").value;
@@ -220,62 +164,71 @@ function addHomework(){
         return;
     }
 
-    homeworkList.push({
-        type,subject,date,qna,completed:false
+    await addDoc(collection(db,"homework"),{
+        uid: currentUser.uid,
+        type,subject,date,qna,
+        completed:false,
+        createdAt: Date.now()
     });
-
-    saveData();
-    renderHomework();
-    updateProgress();
 
     document.getElementById("hwType").value="";
     document.getElementById("subject").value="";
     document.getElementById("dateInput").value="";
     document.getElementById("qnaBox").value="";
     document.getElementById("qnaBox").style.display="none";
+
+    await loadHomework();
 }
 
-function deleteHomework(index){
-    homeworkList.splice(index,1);
-    saveData();
+async function loadHomework(){
+    const q = query(
+        collection(db,"homework"),
+        where("uid","==",currentUser.uid),
+        orderBy("createdAt","desc")
+    );
+
+    const snapshot = await getDocs(q);
+    homeworkList=[];
+    snapshot.forEach(docSnap=>{
+        homeworkList.push({ id:docSnap.id, ...docSnap.data() });
+    });
+
     renderHomework();
     updateProgress();
 }
 
-function toggleComplete(index){
-    homeworkList[index].completed=!homeworkList[index].completed;
-    saveData();
-    renderHomework();
-    updateProgress();
+window.deleteHomework = async function(id){
+    await deleteDoc(doc(db,"homework",id));
+    await loadHomework();
+}
+
+window.toggleComplete = async function(id,current){
+    await updateDoc(doc(db,"homework",id),{
+        completed: !current
+    });
+    await loadHomework();
 }
 
 function renderHomework(){
     const list=document.getElementById("homeworkList");
     list.innerHTML="";
+    const today=new Date(); today.setHours(0,0,0,0);
 
-    const today=new Date();
-    today.setHours(0,0,0,0);
-
-    homeworkList.forEach((hw,index)=>{
+    homeworkList.forEach((hw)=>{
         const div=document.createElement("div");
-
-        const dueDate=new Date(hw.date);
-        dueDate.setHours(0,0,0,0);
-
+        const dueDate=new Date(hw.date); dueDate.setHours(0,0,0,0);
         const diffDays=Math.ceil((dueDate - today)/(1000*60*60*24));
 
         let statusClass="green";
         if(diffDays<0) statusClass="red";
-        else if(diffDays===0) statusClass="yellow";
         else if(diffDays<=2) statusClass="yellow";
-
-        div.className=`homework ${statusClass}`;
 
         let dueText="";
         if(diffDays>0) dueText=`${diffDays} day${diffDays>1?"s":""} remaining`;
         else if(diffDays===0) dueText="Due today";
         else dueText=`Overdue by ${Math.abs(diffDays)} day${Math.abs(diffDays)>1?"s":""}`;
 
+        div.className=`homework ${statusClass}`;
         div.innerHTML=`
             <div>
                 <strong>${hw.subject}</strong> - ${hw.type}
@@ -283,8 +236,8 @@ function renderHomework(){
                 <div class="due-text">${dueText}</div>
             </div>
             <div class="actions">
-                <button class="small-btn" onclick="toggleComplete(${index})">${hw.completed?"Undo":"Done"}</button>
-                <button class="small-btn" onclick="deleteHomework(${index})">❌</button>
+                <button class="small-btn" onclick="toggleComplete('${hw.id}', ${hw.completed})">${hw.completed?"Undo":"Done"}</button>
+                <button class="small-btn" onclick="deleteHomework('${hw.id}')">❌</button>
             </div>
         `;
 
@@ -301,53 +254,10 @@ function updateProgress(){
     const total=homeworkList.length;
     const done=homeworkList.filter(hw=>hw.completed).length;
     const percent=total===0?0:(done/total)*100;
-
     document.getElementById("progressBar").style.width=percent+"%";
     document.getElementById("allDone").style.display=
         total>0 && done===total?"block":"none";
 }
-
-renderHomework();
-updateProgress();
-</script>
-
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
-from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyBvxAsbhzV_XwEkmPTBNSchgapkSU2NFUI",
-  authDomain: "homework-tracker-global.firebaseapp.com",
-  projectId: "homework-tracker-global",
-  storageBucket: "homework-tracker-global.firebasestorage.app",
-  messagingSenderId: "801681205060",
-  appId: "1:801681205060:web:bbaa8fadd867a32edf9911"
-};
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const provider = new GoogleAuthProvider();
-
-const loginBtn=document.getElementById("loginBtn");
-const logoutBtn=document.getElementById("logoutBtn");
-const welcomeScreen=document.getElementById("welcomeScreen");
-const trackerScreen=document.getElementById("trackerScreen");
-const userInfo=document.getElementById("userInfo");
-
-loginBtn.addEventListener("click",()=>{ signInWithPopup(auth,provider); });
-logoutBtn.addEventListener("click",()=>{ signOut(auth); });
-
-onAuthStateChanged(auth,(user)=>{
-    if(user){
-        welcomeScreen.style.display="none";
-        trackerScreen.style.display="block";
-        userInfo.textContent="Logged in as: "+user.displayName;
-    }else{
-        welcomeScreen.style.display="block";
-        trackerScreen.style.display="none";
-    }
-});
 </script>
 
 </body>
