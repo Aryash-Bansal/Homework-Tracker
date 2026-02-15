@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Homework Tracker</title>
+
+    <!-- ✅ MOBILE FIX -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6f9;
+            text-align: center;
+            padding: 20px;
+            margin: 0;
+        }
+
+        /* --- Welcome Screen --- */
+        #welcomeScreen {
+            margin-top: 50px;
+        }
+
+        #welcomeScreen h1 { font-size: 48px; margin-bottom: 10px; color: #333; }
+        #welcomeScreen h2 { font-size: 24px; margin-bottom: 5px; color: #555; }
+        #welcomeScreen h3 { font-size: 16px; margin-bottom: 30px; color: #888; }
+
+        #welcomeScreen button {
+            padding: 14px 35px;
+            font-size: 20px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+
+        #trackerScreen { display: none; }
+
+        h1 { margin-bottom: 5px; }
+
+        #streakDisplay {
+            margin-bottom: 20px;
+            color: #ff6600;
+        }
+
+        .form-container {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: flex-end;
+            margin-bottom: 20px;
+        }
+
+        /* ✅ Responsive Inputs */
+        input, select {
+            padding: 12px;
+            font-size: 16px; /* prevents phone zoom */
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            width: 100%;
+            max-width: 250px;
+            box-sizing: border-box;
+        }
+
+        .plus-btn {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            border: none;
+            font-size: 22px;
+            background: #4CAF50;
+            color: white;
+            cursor: pointer;
+        }
+
+        .homework {
+            background: white;
+            padding: 14px;
+            margin: 10px auto;
+            width: 95%;
+            max-width: 650px;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .green { border-left: 6px solid green; }
+        .yellow { border-left: 6px solid orange; }
+        .red { border-left: 6px solid red; }
+
+        .overdue-text { color: red; font-weight: bold; }
+
+        .actions { display: flex; gap: 8px; }
+
+        .progress-container {
+            width: 95%;
+            max-width: 650px;
+            background: #ddd;
+            margin: 20px auto;
+            border-radius: 20px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 20px;
+            width: 0%;
+            background: #4CAF50;
+            transition: width 0.4s ease;
+        }
+
+        #allDone {
+            font-size: 40px;
+            font-weight: bold;
+            color: green;
+            display: none;
+            margin-top: 20px;
+        }
+
+        .counter {
+            font-size: 14px;
+            margin-top: 5px;
+        }
+
+        .small-btn {
+            padding: 4px 8px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        /* ✅ MOBILE STACKING */
+        @media (max-width: 600px) {
+
+            #welcomeScreen h1 { font-size: 32px; }
+            h1 { font-size: 26px; }
+
+            .form-container {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .homework {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+
+            .actions {
+                align-self: flex-end;
+            }
+
+            #allDone {
+                font-size: 28px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Welcome Screen -->
+<div id="welcomeScreen">
+    <h1>Welcome to Homework Tracker!!!</h1>
+    <h2>All your homework in one place</h2>
+    <h3>Made by Aryash Bansal</h3>
+    <button onclick="startApp()">Start</button>
+</div>
+
+<!-- Tracker Screen -->
+<div id="trackerScreen">
+    <h1>Homework Tracker</h1>
+    <h2 id="streakDisplay">🔥 Streak: 0 Days</h2>
+
+    <div class="form-container">
+        <select id="hwType" onchange="checkType()">
+            <option value="">Homework Type</option>
+            <option>TB Exercises</option>
+            <option>QnAs</option>
+            <option>Make Notes</option>
+            <option>Reading</option>
+            <option>Project</option>
+        </select>
+
+        <input type="text" id="qnaBox" placeholder="Number of Questions" style="display:none;">
+
+        <select id="subject">
+            <option value="">Subject</option>
+            <option>English</option>
+            <option>History/Civics</option>
+            <option>Geography</option>
+            <option>Maths</option>
+            <option>Computer</option>
+            <option>Biology</option>
+            <option>Chemistry</option>
+            <option>Physics</option>
+            <option>Hindi</option>
+            <option>Kannada</option>
+            <option>French</option>
+        </select>
+
+        <div>
+            <label style="font-size:12px;">Submission Date</label><br>
+            <input type="date" id="dateInput">
+        </div>
+
+        <button class="plus-btn" onclick="addHomework()">+</button>
+    </div>
+
+    <div class="progress-container">
+        <div class="progress-bar" id="progressBar"></div>
+    </div>
+
+    <div id="homeworkList"></div>
+    <div id="allDone">ALL DONE 🎉</div>
+</div>
+
+<script>
+
+// === Welcome to Tracker transition ===
+function startApp() {
+    document.getElementById('welcomeScreen').style.display = 'none';
+    document.getElementById('trackerScreen').style.display = 'block';
+}
+
+// ====================== DATA ======================
+let homeworkList = JSON.parse(localStorage.getItem("homework")) || [];
+let today = new Date(); today.setHours(0,0,0,0);
+let todayStr = today.toISOString().split("T")[0];
+let streakData = JSON.parse(localStorage.getItem("streakData")) || {
+    streak: 0,
+    lastDate: null,
+    completedToday: false
+};
+
+// ====================== STREAK ======================
+function updateStreakOnLoad(){
+    if(streakData.lastDate){
+        let last = new Date(streakData.lastDate);
+        last.setHours(0,0,0,0);
+        let diff = (today - last)/(1000*60*60*24);
+        if(diff > 1) streakData.streak = 0;
+        if(diff >= 1) streakData.completedToday = false;
+    }
+    streakData.lastDate = todayStr;
+    localStorage.setItem("streakData", JSON.stringify(streakData));
+    updateStreakDisplay();
+}
+
+function updateStreakDisplay(){
+    let text = streakData.streak===1 ? "🔥 Streak: 1 Day" : "🔥 Streak: "+streakData.streak+" Days";
+    document.getElementById("streakDisplay").innerText = text;
+}
+
+// ====================== HOMEWORK ======================
+function saveData(){
+    localStorage.setItem("homework", JSON.stringify(homeworkList));
+}
+
+function checkType(){
+    let type = document.getElementById("hwType").value;
+    document.getElementById("qnaBox").style.display = type==="QnAs" ? "block" : "none";
+}
+
+function addHomework(){
+    let type = document.getElementById("hwType").value;
+    let subject = document.getElementById("subject").value;
+    let date = document.getElementById("dateInput").value;
+    let qnaValue = document.getElementById("qnaBox").value;
+
+    if(!type || !subject || !date){
+        alert("Please fill all fields!");
+        return;
+    }
+
+    let newHW = {type, subject, date, completed:false};
+
+    if(type==="QnAs"){
+        if(isNaN(qnaValue) || qnaValue.trim()===""){
+            alert("Invalid input! Enter a number.");
+            return;
+        }
+        newHW.totalQuestions = parseInt(qnaValue);
+        newHW.doneQuestions = 0;
+    }
+
+    homeworkList.push(newHW);
+    saveData();
+    displayHomework();
+
+    document.getElementById("hwType").value="";
+    document.getElementById("subject").value="";
+    document.getElementById("dateInput").value="";
+    document.getElementById("qnaBox").value="";
+    document.getElementById("qnaBox").style.display="none";
+}
+
+function increaseQuestion(index){
+    let hw = homeworkList[index];
+    if(hw.doneQuestions < hw.totalQuestions){
+        hw.doneQuestions++;
+        if(hw.doneQuestions === hw.totalQuestions) completeHomework(index);
+        saveData();
+        displayHomework();
+    }
+}
+
+function completeHomework(index){
+    if(homeworkList[index].completed) return;
+
+    homeworkList[index].completed = true;
+
+    if(!streakData.completedToday){
+        streakData.completedToday = true;
+        streakData.streak += 1;
+        streakData.lastDate = todayStr;
+        localStorage.setItem("streakData", JSON.stringify(streakData));
+    }
+
+    saveData();
+    displayHomework();
+    updateStreakDisplay();
+}
+
+function deleteHomework(index){
+    homeworkList.splice(index,1);
+    saveData();
+    displayHomework();
+}
+
+function getDaysLeft(date){
+    let today=new Date(); today.setHours(0,0,0,0);
+    let due=new Date(date); due.setHours(0,0,0,0);
+    return Math.floor((due-today)/(1000*60*60*24));
+}
+
+function displayHomework(){
+    let container=document.getElementById("homeworkList");
+    container.innerHTML="";
+    homeworkList.sort((a,b)=>new Date(a.date)-new Date(b.date));
+    let completedCount=0;
+
+    homeworkList.forEach((hw,index)=>{
+        if(hw.completed) completedCount++;
+
+        let daysLeft=getDaysLeft(hw.date);
+        let statusClass="",statusText="";
+
+        if(daysLeft<0){
+            statusClass="red";
+            statusText='<span class="overdue-text">Overdue</span>';
+        }
+        else if(daysLeft<=1){
+            statusClass="yellow";
+            statusText=daysLeft===0?"Due Today":"Due Tomorrow";
+        }
+        else{
+            statusClass="green";
+            statusText=daysLeft+" days left";
+        }
+
+        let counterHTML="";
+        if(hw.totalQuestions){
+            counterHTML=`<div class="counter">${hw.doneQuestions} / ${hw.totalQuestions} 
+            <button class="small-btn" onclick="increaseQuestion(${index})">+</button></div>`;
+        }
+
+        let div=document.createElement("div");
+        div.className="homework "+statusClass;
+
+        div.innerHTML=`
+        <div>
+            <strong>${hw.type}</strong> | ${hw.subject} | ${hw.date}<br>
+            ${statusText}
+            ${counterHTML}
+        </div>
+        <div class="actions">
+            ${!hw.completed && !hw.totalQuestions ? `<button onclick="completeHomework(${index})">✔</button>` : ""}
+            <button onclick="deleteHomework(${index})">❌</button>
+        </div>`;
+
+        if(hw.completed) div.style.opacity="0.5";
+
+        container.appendChild(div);
+    });
+
+    let percent=homeworkList.length===0?0:
+        Math.round((completedCount/homeworkList.length)*100);
+
+    document.getElementById("progressBar").style.width=percent+"%";
+
+    if(percent===100 && homeworkList.length>0){
+        document.getElementById("allDone").style.display="block";
+        confetti();
+    }
+    else{
+        document.getElementById("allDone").style.display="none";
+    }
+}
+
+updateStreakOnLoad();
+displayHomework();
+updateStreakDisplay();
+
+</script>
+
+</body>
+</html>
