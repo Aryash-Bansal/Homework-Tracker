@@ -1,11 +1,14 @@
 <!DOCTYPE html>
 <html>
 <head>
-
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 
-<title>Homework Tracker v2</title> <!-- 👈 VERSION TAG -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#4CAF50">
+
+<title>Homework Tracker</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
@@ -15,42 +18,76 @@ body {
     margin: 0;
 }
 
-/* BIG OBVIOUS CHANGE */
-body::before {
-    content: "NEW UI LOADED ✅";
-    display: block;
-    background: black;
-    color: white;
-    padding: 5px;
+#welcomeScreen {
     text-align: center;
+    margin-top: 120px;
 }
 
-/* layout */
+#loginBtn {
+    padding: 14px 35px;
+    font-size: 18px;
+    background: #4285F4;
+    color: white;
+    border: none;
+    border-radius: 12px;
+}
+
+/* APP */
 #trackerScreen {
     display: none;
-    max-width: 600px;
+    max-width: 650px;
     margin: auto;
-    padding: 40px 20px;
+    padding: 40px 20px 100px;
 }
 
+/* HEADER */
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+#userInfo {
+    font-size: 14px;
+    color: #666;
+}
+
+#logoutBtn {
+    background: none;
+    border: none;
+    color: #888;
+    cursor: pointer;
+}
+
+/* TITLE */
 h1 {
     font-size: 32px;
+    margin: 20px 0;
     text-align: left;
 }
 
+/* FORM */
 .form-container {
     display: flex;
     flex-direction: column;
     gap: 15px;
 }
 
+.field label {
+    font-size: 13px;
+    color: #666;
+    display: block;
+    margin-bottom: 5px;
+}
+
 input, select {
     width: 100%;
     padding: 12px;
     border-radius: 12px;
+    border: 1px solid #ddd;
 }
 
-/* floating button */
+/* FLOAT BUTTON */
 .plus-btn {
     position: fixed;
     bottom: 20px;
@@ -59,39 +96,238 @@ input, select {
     height: 60px;
     font-size: 28px;
     border-radius: 50%;
-    background: green;
+    background: #4CAF50;
     color: white;
+    border: none;
+    cursor: pointer;
+}
+
+/* LIST */
+.homework {
+    background: white;
+    padding: 15px;
+    margin-top: 10px;
+    border-radius: 12px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.green { border-left: 5px solid green; }
+.yellow { border-left: 5px solid orange; }
+.red { border-left: 5px solid red; }
+
+.due-text {
+    font-size: 13px;
+    color: #666;
+}
+
+/* EMPTY */
+.empty {
+    text-align: center;
+    margin-top: 40px;
+    color: #888;
 }
 </style>
-
 </head>
 
 <body>
 
 <div id="welcomeScreen">
     <h1>Homework Tracker</h1>
-    <button id="loginBtn">Login</button>
+    <p>All your homework in one place</p>
+    <button id="loginBtn">Sign in with Google</button>
 </div>
 
 <div id="trackerScreen">
+
+    <div class="header">
+        <span id="userInfo"></span>
+        <button id="logoutBtn">Logout</button>
+    </div>
+
     <h1>Homework Tracker</h1>
 
     <div class="form-container">
-        <select id="hwType">
-            <option>Test</option>
-        </select>
 
-        <input type="date" id="dateInput">
+        <div class="field">
+            <label>Category</label>
+            <select id="hwType" onchange="checkType()">
+                <option value="">Select</option>
+                <option>TB Exercises</option>
+                <option>QnAs</option>
+                <option>Make Notes</option>
+                <option>Reading</option>
+                <option>Project</option>
+            </select>
+        </div>
+
+        <div class="field" id="qnaWrap" style="display:none;">
+            <label>Number of Questions</label>
+            <input id="qnaBox">
+        </div>
+
+        <div class="field">
+            <label>Subject</label>
+            <select id="subject">
+                <option value="">Select</option>
+                <option>English</option>
+                <option>History/Civics</option>
+                <option>Geography</option>
+                <option>Maths</option>
+                <option>Computer</option>
+                <option>Biology</option>
+                <option>Chemistry</option>
+                <option>Physics</option>
+                <option>Hindi</option>
+                <option>Kannada</option>
+                <option>French</option>
+            </select>
+        </div>
+
+        <div class="field">
+            <label>Due Date</label>
+            <input type="date" id="dateInput">
+        </div>
+
     </div>
 
-    <button class="plus-btn">+</button>
+    <button class="plus-btn" onclick="addHomework()">+</button>
+
+    <div id="homeworkList"></div>
+
 </div>
 
-<script>
-document.getElementById("loginBtn").onclick = () => {
-    document.getElementById("welcomeScreen").style.display="none";
-    document.getElementById("trackerScreen").style.display="block";
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
+from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
+import { getFirestore, collection, addDoc, getDocs, deleteDoc, updateDoc, doc, query, where, orderBy }
+from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBvxAsbhzV_XwEkmPTBNSchgapkSU2NFUI",
+  authDomain: "homework-tracker-global.firebaseapp.com",
+  projectId: "homework-tracker-global",
 };
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const provider = new GoogleAuthProvider();
+
+let currentUser = null;
+let homeworkList = [];
+
+loginBtn.onclick = () => signInWithPopup(auth,provider);
+logoutBtn.onclick = () => signOut(auth);
+
+onAuthStateChanged(auth, async (user)=>{
+    if(user){
+        currentUser=user;
+        welcomeScreen.style.display="none";
+        trackerScreen.style.display="block";
+        userInfo.textContent="Logged in as: "+user.displayName;
+        loadHomework();
+    }
+});
+
+window.checkType = ()=>{
+    qnaWrap.style.display = hwType.value==="QnAs"?"block":"none";
+};
+
+window.addHomework = async ()=>{
+    if(!hwType.value||!subject.value||!dateInput.value) return;
+
+    await addDoc(collection(db,"homework"),{
+        uid: currentUser.uid,
+        type: hwType.value,
+        subject: subject.value,
+        date: dateInput.value,
+        qna: qnaBox.value,
+        completed:false,
+        createdAt: Date.now()
+    });
+
+    hwType.value="";
+    subject.value="";
+    dateInput.value="";
+    qnaBox.value="";
+    qnaWrap.style.display="none";
+
+    loadHomework();
+};
+
+async function loadHomework(){
+    const q = query(
+        collection(db,"homework"),
+        where("uid","==",currentUser.uid),
+        orderBy("createdAt","desc")
+    );
+
+    const snap = await getDocs(q);
+    homeworkList=[];
+    snap.forEach(d=>homeworkList.push({id:d.id,...d.data()}));
+
+    renderHomework();
+}
+
+window.deleteHomework = async id=>{
+    await deleteDoc(doc(db,"homework",id));
+    loadHomework();
+};
+
+window.toggleComplete = async (id,current)=>{
+    await updateDoc(doc(db,"homework",id),{completed:!current});
+    loadHomework();
+};
+
+function renderHomework(){
+    const list=document.getElementById("homeworkList");
+    list.innerHTML="";
+
+    if(homeworkList.length===0){
+        list.innerHTML='<div class="empty">No homework yet</div>';
+        return;
+    }
+
+    const today=new Date(); today.setHours(0,0,0,0);
+
+    homeworkList.forEach(hw=>{
+        const div=document.createElement("div");
+
+        const due=new Date(hw.date);
+        due.setHours(0,0,0,0);
+
+        const diff=Math.ceil((due-today)/(1000*60*60*24));
+
+        let status="green";
+        if(diff<0) status="red";
+        else if(diff<=2) status="yellow";
+
+        div.className=`homework ${status}`;
+        div.innerHTML=`
+            <div>
+                <strong>${hw.subject}</strong> - ${hw.type}
+                ${hw.qna?` (${hw.qna})`:""}
+                <div class="due-text">
+                    ${diff>0?diff+" days left":diff===0?"Due today":"Overdue"}
+                </div>
+            </div>
+            <div>
+                <button onclick="toggleComplete('${hw.id}',${hw.completed})">${hw.completed?"Undo":"Done"}</button>
+                <button onclick="deleteHomework('${hw.id}')">❌</button>
+            </div>
+        `;
+
+        list.appendChild(div);
+    });
+}
+</script>
+
+<script>
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.getRegistrations().then(regs => regs.forEach(r => r.unregister()));
+}
 </script>
 
 </body>
