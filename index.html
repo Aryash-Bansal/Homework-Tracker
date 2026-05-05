@@ -18,25 +18,25 @@ body {
     margin: 0;
 }
 
-/* ---- CONTAINER ---- */
+/* MAIN CONTAINER */
 #trackerScreen {
     display: none;
-    padding: 30px 20px 80px;
     max-width: 700px;
     margin: auto;
+    padding: 40px 20px 100px;
 }
 
-/* ---- HEADER ---- */
+/* HEADER */
 .header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 20px;
+    margin-bottom: 10px;
 }
 
 #userInfo {
     font-size: 14px;
-    color: #555;
+    color: #666;
 }
 
 #logoutBtn {
@@ -47,39 +47,41 @@ body {
     font-size: 14px;
 }
 
-/* ---- TITLE ---- */
+/* TITLE */
 h1 {
-    font-size: 32px;
-    margin-bottom: 25px;
+    font-size: 34px;
+    margin: 20px 0 25px;
     text-align: left;
 }
 
-/* ---- FORM ---- */
+/* FORM */
 .form-container {
     display: flex;
     flex-direction: column;
-    gap: 15px;
+    gap: 18px;
 }
 
-/* labels */
+.field {
+    text-align: left;
+}
+
 .label {
     font-size: 13px;
     color: #666;
-    text-align: left;
-    margin-bottom: 4px;
+    margin-bottom: 5px;
 }
 
 input, select {
-    padding: 12px;
+    width: 100%;
+    padding: 13px;
     font-size: 16px;
     border-radius: 12px;
     border: 1px solid #ddd;
-    width: 100%;
-    background: white;
+    background: #fff;
     box-sizing: border-box;
 }
 
-/* ---- FAB BUTTON ---- */
+/* FLOATING BUTTON */
 .plus-btn {
     position: fixed;
     bottom: 20px;
@@ -92,10 +94,10 @@ input, select {
     background: #4CAF50;
     color: white;
     cursor: pointer;
-    box-shadow: 0 6px 15px rgba(0,0,0,0.2);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.2);
 }
 
-/* ---- LIST ---- */
+/* LIST */
 .homework {
     background: white;
     padding: 16px;
@@ -127,14 +129,7 @@ input, select {
     cursor: pointer;
 }
 
-/* ---- EMPTY STATE ---- */
-.empty {
-    margin-top: 40px;
-    color: #888;
-    font-size: 16px;
-}
-
-/* ---- PROGRESS ---- */
+/* PROGRESS */
 .progress-container {
     width: 100%;
     background: #ddd;
@@ -149,10 +144,17 @@ input, select {
     background: #4CAF50;
 }
 
-/* ---- LOGIN SCREEN (slightly improved) ---- */
-#welcomeScreen {
-    margin-top: 100px;
+/* EMPTY STATE */
+.empty {
     text-align: center;
+    margin-top: 40px;
+    color: #888;
+}
+
+/* LOGIN SCREEN (cleaned) */
+#welcomeScreen {
+    text-align: center;
+    margin-top: 120px;
 }
 
 #loginBtn {
@@ -169,12 +171,14 @@ input, select {
 
 <body>
 
+<!-- LOGIN -->
 <div id="welcomeScreen">
     <h1>Homework Tracker</h1>
     <p>All your homework in one place</p>
     <button id="loginBtn">Sign in with Google</button>
 </div>
 
+<!-- TRACKER -->
 <div id="trackerScreen">
 
     <div class="header">
@@ -186,7 +190,7 @@ input, select {
 
     <div class="form-container">
 
-        <div>
+        <div class="field">
             <div class="label">Category</div>
             <select id="hwType" onchange="checkType()">
                 <option value="">Select</option>
@@ -198,22 +202,30 @@ input, select {
             </select>
         </div>
 
-        <div id="qnaWrap" style="display:none;">
+        <div class="field" id="qnaWrap" style="display:none;">
             <div class="label">Number of Questions</div>
             <input type="text" id="qnaBox">
         </div>
 
-        <div>
+        <div class="field">
             <div class="label">Subject</div>
             <select id="subject">
                 <option value="">Select</option>
                 <option>English</option>
+                <option>History/Civics</option>
+                <option>Geography</option>
                 <option>Maths</option>
-                <option>Science</option>
+                <option>Computer</option>
+                <option>Biology</option>
+                <option>Chemistry</option>
+                <option>Physics</option>
+                <option>Hindi</option>
+                <option>Kannada</option>
+                <option>French</option>
             </select>
         </div>
 
-        <div>
+        <div class="field">
             <div class="label">Due Date</div>
             <input type="date" id="dateInput">
         </div>
@@ -231,28 +243,9 @@ input, select {
 
 </div>
 
+<!-- 🔥 YOUR ORIGINAL FIREBASE SCRIPT (UNCHANGED) -->
 <script type="module">
-/* 🔥 YOUR FIREBASE CODE — UNTOUCHED (same as before) */
-
-/* ONLY CHANGE BELOW */
-window.checkType = function(){
-    let type=document.getElementById("hwType").value;
-    document.getElementById("qnaWrap").style.display =
-        type==="QnAs"?"block":"none";
-}
-
-/* EMPTY STATE FIX */
-function renderHomework(){
-    const list=document.getElementById("homeworkList");
-    list.innerHTML="";
-
-    if(homeworkList.length===0){
-        list.innerHTML='<div class="empty">No homework tasks yet. Add one to get started!</div>';
-        return;
-    }
-
-    /* rest same as your code */
-}
+/* KEEP YOUR EXISTING FIREBASE CODE EXACTLY HERE */
 </script>
 
 <script>
