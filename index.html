@@ -20,23 +20,25 @@ body {
     text-align: center;
 }
 
+#welcomeScreen { margin-top: 60px; }
+#welcomeScreen h1 { font-size: 42px; }
+
 #trackerScreen { display: none; }
 
-h1 { margin: 15px 0; }
-
-/* HEADER */
 .header {
     display: flex;
     justify-content: space-between;
     align-items: center;
 }
 
-/* FORM */
+h1 { margin: 15px 0; }
+
 .form-container {
     display: flex;
     flex-direction: column;
     gap: 12px;
     align-items: center;
+    margin-bottom: 20px;
 }
 
 input, select {
@@ -62,7 +64,7 @@ input, select {
     border: none;
 }
 
-/* CARD */
+/* Cards */
 .homework {
     background: white;
     padding: 15px;
@@ -75,9 +77,11 @@ input, select {
     align-items: center;
 }
 
-.completed { opacity: 0.5; }
+.completed {
+    opacity: 0.5;
+}
 
-/* PROGRESS */
+/* Progress */
 .progress-container {
     width: 90%;
     max-width: 600px;
@@ -164,7 +168,6 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebas
 import {
   getAuth,
   GoogleAuthProvider,
-  signInWithPopup,
   signInWithRedirect,
   getRedirectResult,
   signOut,
@@ -184,10 +187,14 @@ import {
   orderBy
 } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
+/* 🔥 USE YOUR EXACT CONFIG */
 const firebaseConfig = {
   apiKey: "YOUR_API_KEY",
   authDomain: "homework-tracker-global.firebaseapp.com",
-  projectId: "homework-tracker-global"
+  projectId: "homework-tracker-global",
+  storageBucket: "homework-tracker-global.appspot.com",
+  messagingSenderId: "YOUR_ID",
+  appId: "YOUR_APP_ID"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -198,16 +205,16 @@ const provider = new GoogleAuthProvider();
 let currentUser=null;
 let homeworkList=[];
 
-/* LOGIN FIX (ROBUST) */
-document.getElementById("loginBtn").onclick = async () => {
-    try {
-        await signInWithPopup(auth, provider);
-    } catch (e) {
-        await signInWithRedirect(auth, provider);
-    }
+/* LOGIN (NO POPUP BUG) */
+document.getElementById("loginBtn").onclick = () => {
+    signInWithRedirect(auth, provider);
 };
 
-/* HANDLE REDIRECT FIRST */
+document.getElementById("logoutBtn").onclick = () => {
+    signOut(auth);
+};
+
+/* HANDLE REDIRECT */
 getRedirectResult(auth).catch(()=>{});
 
 /* AUTH STATE */
@@ -223,9 +230,6 @@ onAuthStateChanged(auth, async user=>{
         trackerScreen.style.display="none";
     }
 });
-
-/* LOGOUT */
-logoutBtn.onclick = ()=> signOut(auth);
 
 /* ADD */
 window.addHomework = async ()=>{
@@ -295,6 +299,7 @@ function renderHomework(){
             }
         </div>
         `;
+
         list.appendChild(div);
     });
 
