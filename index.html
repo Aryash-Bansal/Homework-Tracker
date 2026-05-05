@@ -19,7 +19,6 @@ body {
     padding: 20px;
 }
 
-/* START SCREEN */
 #welcomeScreen {
     display: flex;
     flex-direction: column;
@@ -36,7 +35,6 @@ body {
     color: white;
 }
 
-/* APP */
 #trackerScreen { display: none; }
 
 .header {
@@ -47,7 +45,6 @@ body {
 
 h1 { text-align: center; }
 
-/* FORM */
 .form-container {
     display: flex;
     flex-direction: column;
@@ -63,7 +60,6 @@ input, select {
     border: 1px solid #ddd;
 }
 
-/* FAB */
 .plus-btn {
     position: fixed;
     bottom: 20px;
@@ -77,7 +73,6 @@ input, select {
     border: none;
 }
 
-/* CARDS */
 .homework {
     background: white;
     padding: 15px;
@@ -88,35 +83,16 @@ input, select {
     display: flex;
     justify-content: space-between;
 }
-
-.completed { opacity: 0.5; }
-
-/* PROGRESS */
-.progress-container {
-    width: 90%;
-    max-width: 600px;
-    margin: 20px auto;
-    background: #ddd;
-    border-radius: 20px;
-}
-
-.progress-bar {
-    height: 18px;
-    width: 0%;
-    background: #4CAF50;
-}
 </style>
 </head>
 
 <body>
 
-<!-- START -->
 <div id="welcomeScreen">
     <h1>Homework Tracker</h1>
     <button id="loginBtn">Sign in with Google</button>
 </div>
 
-<!-- APP -->
 <div id="trackerScreen">
 <div class="header">
 <span id="userInfo"></span>
@@ -166,7 +142,9 @@ import {
   signInWithRedirect,
   getRedirectResult,
   signOut,
-  onAuthStateChanged
+  onAuthStateChanged,
+  setPersistence,
+  browserLocalPersistence
 } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
 
 import {
@@ -174,23 +152,19 @@ import {
   collection,
   addDoc,
   getDocs,
-  deleteDoc,
-  updateDoc,
   doc,
   query,
   where,
   orderBy
 } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
   apiKey: "AIzaSyBvxAsbhzV_XwEkmPTBNSchgapkSU2NFUI",
   authDomain: "homework-tracker-global.firebaseapp.com",
   projectId: "homework-tracker-global",
   storageBucket: "homework-tracker-global.firebasestorage.app",
   messagingSenderId: "801681205060",
-  appId: "1:801681205060:web:bbaa8fadd867a32edf9911",
-  measurementId: "G-ERTQCNLFKD"
+  appId: "1:801681205060:web:bbaa8fadd867a32edf9911"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -198,7 +172,10 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const provider = new GoogleAuthProvider();
 
-/* ELEMENTS (CRITICAL FIX) */
+/* 🔥 CRITICAL FIX */
+await setPersistence(auth, browserLocalPersistence);
+
+/* ELEMENTS */
 const welcomeScreen = document.getElementById("welcomeScreen");
 const trackerScreen = document.getElementById("trackerScreen");
 const loginBtn = document.getElementById("loginBtn");
@@ -209,32 +186,23 @@ const userInfo = document.getElementById("userInfo");
 loginBtn.onclick = () => signInWithRedirect(auth, provider);
 logoutBtn.onclick = () => signOut(auth);
 
-/* FORCE CHECK AFTER REDIRECT */
-getRedirectResult(auth).then((result)=>{
-    if(result && result.user){
-        showApp(result.user);
-    }
-}).catch(()=>{});
+/* 🔥 HANDLE REDIRECT */
+await getRedirectResult(auth);
 
-/* AUTH STATE (MAIN FIX) */
-onAuthStateChanged(auth, (user)=>{
+/* 🔥 AUTH STATE (ONLY SOURCE OF TRUTH) */
+onAuthStateChanged(auth, async (user)=>{
     if(user){
-        showApp(user);
+        welcomeScreen.style.display="none";
+        trackerScreen.style.display="block";
+        userInfo.textContent = "Logged in as: " + user.displayName;
+        await loadHomework();
     } else {
         welcomeScreen.style.display="flex";
         trackerScreen.style.display="none";
     }
 });
 
-/* SHOW APP */
-function showApp(user){
-    welcomeScreen.style.display="none";
-    trackerScreen.style.display="block";
-    userInfo.textContent = "Logged in as: " + user.displayName;
-    loadHomework();
-}
-
-/* BASIC HOMEWORK (unchanged logic) */
+/* HOMEWORK */
 window.addHomework = async ()=>{
     if(!hwType.value||!subject.value||!dateInput.value) return;
 
@@ -267,16 +235,15 @@ async function loadHomework(){
 }
 
 function renderHomework(){
-    homeworkListEl.innerHTML="";
+    const list=document.getElementById("homeworkList");
+    list.innerHTML="";
     homeworkList.forEach(hw=>{
         const div=document.createElement("div");
         div.className="homework";
-        div.innerHTML=`<div>${hw.subject} - ${hw.type}</div>`;
-        homeworkListEl.appendChild(div);
+        div.innerHTML=`${hw.subject} - ${hw.type}`;
+        list.appendChild(div);
     });
 }
-
-const homeworkListEl=document.getElementById("homeworkList");
 </script>
 
 </body>
