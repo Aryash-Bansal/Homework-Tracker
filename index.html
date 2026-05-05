@@ -2,6 +2,10 @@
 <html>
 <head>
 <meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#4CAF50">
+
 <title>Homework Tracker</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -9,51 +13,68 @@
 
 <style>
 body {
-    font-family: Arial;
+    font-family: Arial, sans-serif;
     background: #f4f6f9;
+    text-align: center;
+    padding: 20px;
     margin: 0;
 }
 
-/* CONTAINER */
-#trackerScreen {
-    max-width: 650px;
-    margin: auto;
-    padding: 40px 20px 120px;
-}
+#trackerScreen { display: none; }
 
-/* TITLE */
-h1 {
-    text-align: center;
-    margin-bottom: 25px;
-}
-
-/* FORM */
 .form-container {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 15px;
     margin-bottom: 25px;
 }
 
 input, select {
-    width: 100%;
     padding: 12px;
     border-radius: 12px;
-    border: 1px solid #ddd;
+    border: 1px solid #ccc;
+    width: 100%;
 }
 
-/* FLOAT BUTTON */
 .plus-btn {
     position: fixed;
     bottom: 20px;
     right: 20px;
     width: 60px;
     height: 60px;
-    font-size: 28px;
     border-radius: 50%;
     background: #4CAF50;
     color: white;
+    font-size: 28px;
     border: none;
+}
+
+/* CARDS */
+.homework {
+    background: white;
+    padding: 15px;
+    margin-top: 12px;
+    border-radius: 12px;
+    display: flex;
+    justify-content: space-between;
+    transition: all 0.25s ease;
+}
+
+.completed { opacity: 0.5; }
+
+.green { border-left: 5px solid green; }
+.yellow { border-left: 5px solid orange; }
+.red { border-left: 5px solid red; }
+
+/* POP */
+.pop {
+    animation: pop 0.25s ease forwards;
+}
+
+@keyframes pop {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(0); opacity: 0; }
 }
 
 /* PROGRESS */
@@ -71,59 +92,37 @@ input, select {
 }
 
 .progress-text {
-    text-align: center;
+    margin: 10px 0;
     font-size: 14px;
-    margin: 10px 0 20px;
-}
-
-/* LIST */
-.homework {
-    background: white;
-    padding: 15px;
-    margin-top: 12px;
-    border-radius: 12px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    transition: all 0.25s ease;
-}
-
-.completed {
-    opacity: 0.5;
-}
-
-.green { border-left: 5px solid green; }
-.yellow { border-left: 5px solid orange; }
-.red { border-left: 5px solid red; }
-
-/* POP */
-.pop {
-    animation: pop 0.2s ease forwards;
-}
-
-@keyframes pop {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.2); }
-    100% { transform: scale(0); opacity: 0; }
 }
 
 .empty {
-    text-align: center;
+    margin-top: 30px;
     color: #888;
-    margin-top: 40px;
 }
 </style>
 </head>
 
 <body>
 
+<div id="welcomeScreen">
+    <h1>Welcome to Homework Tracker</h1>
+    <button id="loginBtn">Sign in with Google</button>
+</div>
+
 <div id="trackerScreen">
+
+<div>
+<span id="userInfo"></span>
+<button id="logoutBtn">Logout</button>
+</div>
 
 <h1>Homework Tracker</h1>
 
 <div class="form-container">
+
 <select id="hwType">
-<option value="">Type of Homework</option>
+<option value="">Homework Type</option>
 <option>TB Exercises</option>
 <option>QnAs</option>
 <option>Make Notes</option>
@@ -133,12 +132,21 @@ input, select {
 
 <select id="subject">
 <option value="">Subject</option>
-<option>Maths</option>
-<option>Science</option>
 <option>English</option>
+<option>History/Civics</option>
+<option>Geography</option>
+<option>Maths</option>
+<option>Computer</option>
+<option>Biology</option>
+<option>Chemistry</option>
+<option>Physics</option>
+<option>Hindi</option>
+<option>Kannada</option>
+<option>French</option>
 </select>
 
 <input type="date" id="dateInput" onclick="this.showPicker()">
+
 </div>
 
 <button class="plus-btn" onclick="addHomework()">+</button>
@@ -154,31 +162,38 @@ input, select {
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
+from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
 import { getFirestore, collection, addDoc, getDocs, deleteDoc, updateDoc, doc, query, where, orderBy }
 from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
-import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged }
-from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSy...",
+  apiKey: "YOUR_KEY",
   authDomain: "homework-tracker-global.firebaseapp.com",
-  projectId: "homework-tracker-global",
+  projectId: "homework-tracker-global"
 };
 
 const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
 const auth = getAuth(app);
+const db = getFirestore(app);
 const provider = new GoogleAuthProvider();
 
 let currentUser=null;
 let homeworkList=[];
 
-signInWithPopup(auth,provider);
+loginBtn.onclick = ()=> signInWithPopup(auth,provider);
+logoutBtn.onclick = ()=> signOut(auth);
 
-onAuthStateChanged(auth,(user)=>{
+onAuthStateChanged(auth, async user=>{
     if(user){
         currentUser=user;
+        welcomeScreen.style.display="none";
+        trackerScreen.style.display="block";
+        userInfo.textContent="Logged in as: "+user.displayName;
         loadHomework();
+    } else {
+        welcomeScreen.style.display="block";
+        trackerScreen.style.display="none";
     }
 });
 
@@ -214,7 +229,7 @@ async function loadHomework(){
     renderHomework();
 }
 
-window.completeWithPop = async (btn,id)=>{
+window.completeWithPop = function(btn,id){
     const card = btn.closest(".homework");
     card.classList.add("pop");
 
@@ -224,7 +239,7 @@ window.completeWithPop = async (btn,id)=>{
     },200);
 };
 
-window.deleteHomework = async (id)=>{
+window.deleteHomework = async id=>{
     await deleteDoc(doc(db,"homework",id));
     loadHomework();
 };
@@ -234,29 +249,16 @@ function renderHomework(){
     list.innerHTML="";
 
     if(homeworkList.length===0){
-        list.innerHTML='<div class="empty">Add homework to get started</div>';
+        list.innerHTML='<div class="empty">No homework yet</div>';
         updateProgress();
         return;
     }
 
-    // sort properly
     homeworkList.sort((a,b)=>a.completed - b.completed);
-
-    const today=new Date(); today.setHours(0,0,0,0);
 
     homeworkList.forEach(hw=>{
         const div=document.createElement("div");
-
-        const due=new Date(hw.date);
-        due.setHours(0,0,0,0);
-
-        const diff=Math.ceil((due-today)/(1000*60*60*24));
-
-        let status="green";
-        if(diff<0) status="red";
-        else if(diff<=2) status="yellow";
-
-        div.className=`homework ${status} ${hw.completed?"completed":""}`;
+        div.className=`homework ${hw.completed?"completed":""}`;
 
         div.innerHTML=`
         <div>
@@ -278,18 +280,18 @@ function renderHomework(){
 }
 
 function updateProgress(){
-    const total = homeworkList.length;
-    const done = homeworkList.filter(h=>h.completed).length;
+    const total=homeworkList.length;
+    const done=homeworkList.filter(h=>h.completed).length;
 
-    const percent = total===0?0:Math.round((done/total)*100);
-    progressBar.style.width = percent+"%";
+    const percent= total===0?0:Math.round((done/total)*100);
+    progressBar.style.width=percent+"%";
 
     if(total===0){
         progressText.innerText="Add HW to see completion";
     } else if(done===0){
         progressText.innerText="Click done to progress";
     } else {
-        progressText.innerText = percent + "% complete";
+        progressText.innerText=percent+"% complete";
     }
 
     if(total>0 && done===total){
