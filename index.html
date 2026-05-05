@@ -1,324 +1,391 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#4CAF50">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#4CAF50">
 
-<title>Homework Tracker</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Homework Tracker</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<style>
-body {
-    font-family: Arial, sans-serif;
-    background: #f4f6f9;
-    margin: 0;
-    padding: 0;
-}
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
-/* CENTER CONTAINER */
-.container {
-    max-width: 700px;
-    margin: auto;
-    padding: 30px 20px;
-}
+    <style>
+        body { font-family: Arial, sans-serif; background: #f4f6f9; text-align: center; padding: 20px; margin: 0; }
+        #welcomeScreen { margin-top: 60px; }
+        #welcomeScreen h1 { font-size: 48px; margin-bottom: 10px; color: #333; }
+        #welcomeScreen h2 { font-size: 24px; margin-bottom: 5px; color: #555; }
+        #welcomeScreen h3 { font-size: 16px; margin-bottom: 30px; color: #888; }
 
-/* WELCOME */
-#welcomeScreen {
-    text-align: center;
-    margin-top: 80px;
-}
+        #loginBtn {
+            padding: 14px 35px;
+            font-size: 18px;
+            background: #4285F4;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+        }
 
-#welcomeScreen h1 {
-    font-size: 42px;
-    margin-bottom: 10px;
-}
+        #logoutBtn {
+            padding: 6px 12px;
+            font-size: 14px;
+            cursor: pointer;
+        }
 
-#loginBtn {
-    padding: 14px 30px;
-    font-size: 18px;
-    background: #4285F4;
-    color: white;
-    border: none;
-    border-radius: 12px;
-    cursor: pointer;
-}
+        #trackerScreen { display: none; }
 
-/* HEADER */
-.header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-}
+        h1 { margin-bottom: 15px; }
 
-#logoutBtn {
-    background: none;
-    border: none;
-    color: #666;
-    cursor: pointer;
-}
+        .form-container {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: flex-end;
+            margin-bottom: 20px;
+        }
 
-/* TITLE */
-.main-title {
-    font-size: 32px;
-    font-weight: bold;
-    margin-bottom: 25px;
-}
+        input, select {
+            padding: 12px;
+            font-size: 16px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            width: 100%;
+            max-width: 250px;
+            box-sizing: border-box;
+        }
 
-/* FORM */
-.form-group {
-    margin-bottom: 15px;
-    text-align: left;
-}
+        .plus-btn {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            border: none;
+            font-size: 22px;
+            background: #4CAF50;
+            color: white;
+            cursor: pointer;
+        }
 
-label {
-    font-size: 13px;
-    color: #555;
-    margin-bottom: 5px;
-    display: block;
-}
+        .homework {
+            background: white;
+            padding: 14px;
+            margin: 10px auto;
+            width: 95%;
+            max-width: 650px;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
 
-input, select {
-    width: 100%;
-    padding: 12px;
-    border-radius: 12px;
-    border: 1px solid #ddd;
-    background: white;
-    font-size: 16px;
-}
+        .green { border-left: 6px solid green; }
+        .yellow { border-left: 6px solid orange; }
+        .red { border-left: 6px solid red; }
 
-/* ADD BUTTON */
-.add-btn {
-    width: 100%;
-    margin-top: 10px;
-    padding: 14px;
-    border-radius: 12px;
-    border: none;
-    background: #4CAF50;
-    color: white;
-    font-size: 16px;
-    cursor: pointer;
-}
+        .due-text { font-size: 14px; margin-top: 4px; }
 
-/* LIST */
-.homework {
-    background: white;
-    padding: 14px;
-    margin-top: 10px;
-    border-radius: 12px;
-    display: flex;
-    justify-content: space-between;
-}
+        .actions { display: flex; gap: 8px; }
 
-.green { border-left: 5px solid green; }
-.yellow { border-left: 5px solid orange; }
-.red { border-left: 5px solid red; }
+        .progress-container {
+            width: 95%;
+            max-width: 650px;
+            background: #ddd;
+            margin: 20px auto;
+            border-radius: 20px;
+            overflow: hidden;
+        }
 
-.due-text {
-    font-size: 13px;
-    color: #666;
-}
+        .progress-bar {
+            height: 20px;
+            width: 0%;
+            background: #4CAF50;
+            transition: width 0.4s ease;
+        }
 
-/* EMPTY STATE */
-.empty {
-    margin-top: 30px;
-    color: #888;
-}
+        #allDone {
+            font-size: 40px;
+            font-weight: bold;
+            color: green;
+            display: none;
+            margin-top: 20px;
+        }
 
-/* PROGRESS */
-.progress-container {
-    background: #ddd;
-    border-radius: 20px;
-    margin-top: 20px;
-}
+        .small-btn { padding: 4px 8px; font-size: 14px; cursor: pointer; }
 
-.progress-bar {
-    height: 20px;
-    width: 0%;
-    background: #4CAF50;
-    border-radius: 20px;
-}
-</style>
+        @media (max-width: 600px) {
+            #welcomeScreen h1 { font-size: 32px; }
+            h1 { font-size: 26px; }
+
+            .form-container {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .homework {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+
+            .actions { align-self: flex-end; }
+            #allDone { font-size: 28px; }
+        }
+    </style>
 </head>
 
 <body>
 
 <div id="welcomeScreen">
-    <h1>Homework Tracker</h1>
+    <h1>Welcome to Homework Tracker!!!</h1>
+    <h2>All your homework in one place</h2>
+    <h3>Made by Aryash Bansal</h3>
     <button id="loginBtn">Sign in with Google</button>
 </div>
 
-<div id="trackerScreen" style="display:none;">
-    <div class="container">
+<div id="trackerScreen">
+    <div style="margin-bottom:10px;">
+        <span id="userInfo"></span>
+        <button id="logoutBtn">Logout</button>
+    </div>
 
-        <div class="header">
-            <span id="userInfo"></span>
-            <button id="logoutBtn">Logout</button>
-        </div>
+    <h1>Homework Tracker</h1>
 
-        <div class="main-title">Homework Tracker</div>
+    <div class="form-container">
+        <select id="hwType" onchange="checkType()">
+            <option value="">Homework Type</option>
+            <option>TB Exercises</option>
+            <option>QnAs</option>
+            <option>Make Notes</option>
+            <option>Reading</option>
+            <option>Project</option>
+        </select>
 
-        <!-- FORM -->
-        <div class="form-group">
-            <label>Category</label>
-            <select id="hwType" onchange="checkType()">
-                <option value="">Select</option>
-                <option>TB Exercises</option>
-                <option>QnAs</option>
-                <option>Make Notes</option>
-                <option>Reading</option>
-                <option>Project</option>
-            </select>
-        </div>
+        <input type="text" id="qnaBox" placeholder="Number of Questions" style="display:none;">
 
-        <div class="form-group" id="qnaWrap" style="display:none;">
-            <label>Number of Questions</label>
-            <input id="qnaBox">
-        </div>
+        <select id="subject">
+            <option value="">Subject</option>
+            <option>English</option>
+            <option>History/Civics</option>
+            <option>Geography</option>
+            <option>Maths</option>
+            <option>Computer</option>
+            <option>Biology</option>
+            <option>Chemistry</option>
+            <option>Physics</option>
+            <option>Hindi</option>
+            <option>Kannada</option>
+            <option>French</option>
+        </select>
 
-        <div class="form-group">
-            <label>Subject</label>
-            <select id="subject">
-                <option value="">Select</option>
-                <option>Maths</option>
-                <option>Science</option>
-                <option>English</option>
-            </select>
-        </div>
-
-        <div class="form-group">
-            <label>Due Date</label>
+        <div>
+            <label style="font-size:12px;">Submission Date</label><br>
             <input type="date" id="dateInput">
         </div>
 
-        <button class="add-btn" onclick="addHomework()">Add Task</button>
-
-        <!-- PROGRESS -->
-        <div class="progress-container">
-            <div class="progress-bar" id="progressBar"></div>
-        </div>
-
-        <!-- LIST -->
-        <div id="homeworkList"></div>
-        <div id="emptyState" class="empty">No homework yet</div>
-
+        <button class="plus-btn" onclick="addHomework()">+</button>
     </div>
+
+    <div class="progress-container">
+        <div class="progress-bar" id="progressBar"></div>
+    </div>
+
+    <div id="homeworkList"></div>
+    <div id="allDone">ALL DONE 🎉</div>
 </div>
 
-<!-- FIREBASE (UNCHANGED LOGIC) -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
-from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
-import { getFirestore, collection, addDoc, getDocs, deleteDoc, updateDoc, doc, query, where, orderBy }
-from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+import {
+  getAuth, GoogleAuthProvider,
+  signInWithPopup, signInWithRedirect,
+  signOut, onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
 
-const firebaseConfig = { /* YOUR SAME CONFIG */ };
+import {
+  getFirestore, collection, addDoc, getDocs,
+  deleteDoc, updateDoc, doc, query, where, orderBy
+} from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBvxAsbhzV_XwEkmPTBNSchgapkSU2NFUI",
+  authDomain: "homework-tracker-global.firebaseapp.com",
+  projectId: "homework-tracker-global",
+  storageBucket: "homework-tracker-global.firebasestorage.app",
+  messagingSenderId: "801681205060",
+  appId: "1:801681205060:web:bbaa8fadd867a32edf9911"
+};
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+
 const provider = new GoogleAuthProvider();
+provider.setCustomParameters({ prompt: "select_account" });
 
-let currentUser=null;
-let homeworkList=[];
+let currentUser = null;
+let homeworkList = [];
 
-loginBtn.onclick=()=>signInWithPopup(auth,provider);
-logoutBtn.onclick=()=>signOut(auth);
+const loginBtn = document.getElementById("loginBtn");
+const logoutBtn = document.getElementById("logoutBtn");
+const welcomeScreen = document.getElementById("welcomeScreen");
+const trackerScreen = document.getElementById("trackerScreen");
+const userInfo = document.getElementById("userInfo");
 
-onAuthStateChanged(auth, async (user)=>{
-    if(user){
-        currentUser=user;
-        welcomeScreen.style.display="none";
-        trackerScreen.style.display="block";
-        userInfo.textContent=user.displayName;
-        await loadHomework();
-    } else {
-        welcomeScreen.style.display="block";
-        trackerScreen.style.display="none";
+loginBtn.addEventListener("click", async () => {
+    try {
+        await signInWithPopup(auth, provider);
+    } catch (error) {
+        await signInWithRedirect(auth, provider);
     }
 });
 
-window.checkType=()=>{
-    qnaWrap.style.display = hwType.value==="QnAs"?"block":"none";
-}
+logoutBtn.addEventListener("click", () => signOut(auth));
 
-window.addHomework=async ()=>{
-    if(!hwType.value||!subject.value||!dateInput.value){
-        alert("Fill all fields");
+onAuthStateChanged(auth, async (user) => {
+    if (user) {
+        currentUser = user;
+        welcomeScreen.style.display = "none";
+        trackerScreen.style.display = "block";
+        userInfo.textContent = "Logged in as: " + user.displayName;
+        await loadHomework();
+    } else {
+        welcomeScreen.style.display = "block";
+        trackerScreen.style.display = "none";
+    }
+});
+
+window.checkType = function () {
+    let type = document.getElementById("hwType").value;
+    document.getElementById("qnaBox").style.display =
+        type === "QnAs" ? "block" : "none";
+};
+
+window.addHomework = async function () {
+    const type = document.getElementById("hwType").value;
+    const subject = document.getElementById("subject").value;
+    const date = document.getElementById("dateInput").value;
+    const qna = document.getElementById("qnaBox").value;
+
+    if (!type || !subject || !date) {
+        alert("Please fill all required fields!");
         return;
     }
 
-    await addDoc(collection(db,"homework"),{
-        uid:currentUser.uid,
-        type:hwType.value,
-        subject:subject.value,
-        date:dateInput.value,
-        qna:qnaBox.value,
-        completed:false,
-        createdAt:Date.now()
+    await addDoc(collection(db, "homework"), {
+        uid: currentUser.uid,
+        type, subject, date, qna,
+        completed: false,
+        createdAt: Date.now()
     });
 
-    await loadHomework();
-}
+    document.getElementById("hwType").value = "";
+    document.getElementById("subject").value = "";
+    document.getElementById("dateInput").value = "";
+    document.getElementById("qnaBox").value = "";
+    document.getElementById("qnaBox").style.display = "none";
 
-async function loadHomework(){
-    const q=query(
-        collection(db,"homework"),
-        where("uid","==",currentUser.uid),
-        orderBy("createdAt","desc")
+    await loadHomework();
+};
+
+async function loadHomework() {
+    const q = query(
+        collection(db, "homework"),
+        where("uid", "==", currentUser.uid),
+        orderBy("createdAt", "desc")
     );
 
-    const snap=await getDocs(q);
-    homeworkList=[];
-    snap.forEach(d=>homeworkList.push({id:d.id,...d.data()}));
+    const snapshot = await getDocs(q);
+    homeworkList = [];
+    snapshot.forEach(docSnap => {
+        homeworkList.push({ id: docSnap.id, ...docSnap.data() });
+    });
 
     renderHomework();
     updateProgress();
 }
 
-function renderHomework(){
-    homeworkListDiv.innerHTML="";
-    emptyState.style.display = homeworkList.length ? "none":"block";
+window.deleteHomework = async function (id) {
+    await deleteDoc(doc(db, "homework", id));
+    await loadHomework();
+};
 
-    homeworkList.forEach(hw=>{
-        const div=document.createElement("div");
+window.toggleComplete = async function (id, current) {
+    await updateDoc(doc(db, "homework", id), {
+        completed: !current
+    });
+    await loadHomework();
+};
 
-        div.className="homework";
+function renderHomework() {
+    const list = document.getElementById("homeworkList");
+    list.innerHTML = "";
 
-        div.innerHTML=`
-        <div>
-            <b>${hw.subject}</b> - ${hw.type}
-            <div class="due-text">${hw.date}</div>
-        </div>
-        <div>
-            <button onclick="toggleComplete('${hw.id}',${hw.completed})">✔</button>
-            <button onclick="deleteHomework('${hw.id}')">❌</button>
-        </div>
+    if (homeworkList.length === 0) {
+        list.innerHTML = "<p>No homework tasks yet. Add one to get started!</p>";
+        return;
+    }
+
+    const today = new Date(); today.setHours(0,0,0,0);
+
+    homeworkList.forEach(hw => {
+        const div = document.createElement("div");
+
+        const dueDate = new Date(hw.date);
+        dueDate.setHours(0,0,0,0);
+
+        const diffDays = Math.ceil((dueDate - today)/(1000*60*60*24));
+
+        let statusClass = "green";
+        if (diffDays < 0) statusClass = "red";
+        else if (diffDays <= 2) statusClass = "yellow";
+
+        let dueText = "";
+        if (diffDays > 0) dueText = `${diffDays} day${diffDays>1?"s":""} remaining`;
+        else if (diffDays === 0) dueText = "Due today";
+        else dueText = `Overdue by ${Math.abs(diffDays)} day${Math.abs(diffDays)>1?"s":""}`;
+
+        div.className = `homework ${statusClass}`;
+        div.innerHTML = `
+            <div>
+                <strong>${hw.subject}</strong> - ${hw.type}
+                ${hw.qna ? ` (${hw.qna})` : ""}
+                <div class="due-text">${dueText}</div>
+            </div>
+            <div class="actions">
+                <button class="small-btn" onclick="toggleComplete('${hw.id}', ${hw.completed})">
+                    ${hw.completed ? "Undo" : "Done"}
+                </button>
+                <button class="small-btn" onclick="deleteHomework('${hw.id}')">❌</button>
+            </div>
         `;
 
-        homeworkListDiv.appendChild(div);
+        if (hw.completed) {
+            div.style.opacity = "0.6";
+            div.style.textDecoration = "line-through";
+        }
+
+        list.appendChild(div);
     });
 }
 
-window.deleteHomework=async id=>{
-    await deleteDoc(doc(db,"homework",id));
-    loadHomework();
-}
+function updateProgress() {
+    const total = homeworkList.length;
+    const done = homeworkList.filter(hw => hw.completed).length;
+    const percent = total === 0 ? 0 : (done / total) * 100;
 
-window.toggleComplete=async(id,c)=>{
-    await updateDoc(doc(db,"homework",id),{completed:!c});
-    loadHomework();
+    document.getElementById("progressBar").style.width = percent + "%";
+    document.getElementById("allDone").style.display =
+        total > 0 && done === total ? "block" : "none";
 }
+</script>
 
-function updateProgress(){
-    const done=homeworkList.filter(h=>h.completed).length;
-    progressBar.style.width = (done/homeworkList.length*100||0)+"%";
+<script>
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("service-worker.js");
 }
 </script>
 
 </body>
 </html>
-
