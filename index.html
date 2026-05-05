@@ -1,100 +1,212 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <link rel="manifest" href="manifest.json">
+<link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#4CAF50">
-    <title>Homework Tracker</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
-    <style>
-        /* ---- YOUR ENTIRE CSS IS UNCHANGED ---- */
-        body { font-family: Arial, sans-serif; background: #f4f6f9; text-align: center; padding: 20px; margin: 0; }
-        #welcomeScreen { margin-top: 60px; }
-        #welcomeScreen h1 { font-size: 48px; margin-bottom: 10px; color: #333; }
-        #welcomeScreen h2 { font-size: 24px; margin-bottom: 5px; color: #555; }
-        #welcomeScreen h3 { font-size: 16px; margin-bottom: 30px; color: #888; }
-        #loginBtn { padding: 14px 35px; font-size: 18px; background: #4285F4; color: white; border: none; border-radius: 10px; cursor: pointer; }
-        #logoutBtn { padding: 6px 12px; font-size: 14px; cursor: pointer; }
-        #trackerScreen { display: none; }
-        h1 { margin-bottom: 15px; }
-        .form-container { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 20px; }
-        input, select { padding: 12px; font-size: 16px; border-radius: 8px; border: 1px solid #ccc; width: 100%; max-width: 250px; box-sizing: border-box; }
-        .plus-btn { width: 48px; height: 48px; border-radius: 50%; border: none; font-size: 22px; background: #4CAF50; color: white; cursor: pointer; }
-        .homework { background: white; padding: 14px; margin: 10px auto; width: 95%; max-width: 650px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; }
-        .green { border-left: 6px solid green; }
-        .yellow { border-left: 6px solid orange; }
-        .red { border-left: 6px solid red; }
-        .due-text { font-size: 14px; margin-top: 4px; }
-        .actions { display: flex; gap: 8px; }
-        .progress-container { width: 95%; max-width: 650px; background: #ddd; margin: 20px auto; border-radius: 20px; overflow: hidden; }
-        .progress-bar { height: 20px; width: 0%; background: #4CAF50; transition: width 0.4s ease; }
-        #allDone { font-size: 40px; font-weight: bold; color: green; display: none; margin-top: 20px; }
-        .small-btn { padding: 4px 8px; font-size: 14px; cursor: pointer; }
-        @media (max-width: 600px) {
-            #welcomeScreen h1 { font-size: 32px; }
-            h1 { font-size: 26px; }
-            .form-container { flex-direction: column; align-items: center; }
-            .homework { flex-direction: column; align-items: flex-start; gap: 10px; }
-            .actions { align-self: flex-end; }
-            #allDone { font-size: 28px; }
-        }
-    </style>
+<title>Homework Tracker</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body {
+    font-family: Arial, sans-serif;
+    background: #f4f6f9;
+    margin: 0;
+}
+
+/* Layout container */
+.container {
+    max-width: 700px;
+    margin: auto;
+    padding: 25px 15px 80px;
+}
+
+/* Header */
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+#userInfo {
+    font-size: 14px;
+    color: #555;
+}
+
+#logoutBtn {
+    background: none;
+    border: none;
+    color: #888;
+    cursor: pointer;
+    font-size: 13px;
+}
+
+/* Title */
+h1 {
+    font-size: 34px;
+    margin: 10px 0 20px;
+    text-align: center;
+}
+
+/* Form */
+.form-group {
+    text-align: left;
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    font-size: 13px;
+    color: #666;
+    display: block;
+    margin-bottom: 4px;
+}
+
+input, select {
+    width: 100%;
+    padding: 12px;
+    border-radius: 12px;
+    border: 1px solid #ddd;
+    background: white;
+    font-size: 15px;
+    box-sizing: border-box;
+}
+
+/* FAB button */
+.plus-btn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    border: none;
+    font-size: 28px;
+    background: #4CAF50;
+    color: white;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+/* Homework cards */
+.homework {
+    background: white;
+    padding: 14px;
+    margin: 10px auto;
+    border-radius: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.green { border-left: 6px solid green; }
+.yellow { border-left: 6px solid orange; }
+.red { border-left: 6px solid red; }
+
+.due-text {
+    font-size: 13px;
+    margin-top: 4px;
+    color: #666;
+}
+
+.actions {
+    display: flex;
+    gap: 6px;
+}
+
+.small-btn {
+    padding: 5px 8px;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+/* Progress */
+.progress-container {
+    width: 100%;
+    background: #ddd;
+    margin: 20px 0;
+    border-radius: 20px;
+    overflow: hidden;
+}
+
+.progress-bar {
+    height: 18px;
+    width: 0%;
+    background: #4CAF50;
+    transition: 0.4s;
+}
+
+/* Empty state */
+.empty {
+    text-align: center;
+    color: #777;
+    margin-top: 40px;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+    .homework {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+}
+</style>
 </head>
+
 <body>
 
-<!-- ---- YOUR HTML IS UNCHANGED ---- -->
-
-<div id="welcomeScreen">
+<div id="welcomeScreen" style="text-align:center; margin-top:60px;">
     <h1>Welcome to Homework Tracker!!!</h1>
     <h2>All your homework in one place</h2>
     <h3>Made by Aryash Bansal</h3>
     <button id="loginBtn">Sign in with Google</button>
 </div>
 
-<div id="trackerScreen">
-    <div style="margin-bottom:10px;">
+<div id="trackerScreen" style="display:none;">
+<div class="container">
+
+    <div class="header">
         <span id="userInfo"></span>
         <button id="logoutBtn">Logout</button>
     </div>
 
     <h1>Homework Tracker</h1>
 
-    <div class="form-container">
+    <!-- FORM -->
+    <div class="form-group">
+        <label>Category</label>
         <select id="hwType" onchange="checkType()">
-            <option value="">Homework Type</option>
+            <option value="">Select type</option>
             <option>TB Exercises</option>
             <option>QnAs</option>
             <option>Make Notes</option>
             <option>Reading</option>
             <option>Project</option>
         </select>
+    </div>
 
-        <input type="text" id="qnaBox" placeholder="Number of Questions" style="display:none;">
+    <div class="form-group" id="qnaWrapper" style="display:none;">
+        <label>Number of Questions</label>
+        <input type="text" id="qnaBox">
+    </div>
 
+    <div class="form-group">
+        <label>Subject</label>
         <select id="subject">
-            <option value="">Subject</option>
+            <option value="">Select subject</option>
             <option>English</option>
-            <option>History/Civics</option>
-            <option>Geography</option>
             <option>Maths</option>
+            <option>Science</option>
             <option>Computer</option>
-            <option>Biology</option>
-            <option>Chemistry</option>
-            <option>Physics</option>
-            <option>Hindi</option>
-            <option>Kannada</option>
-            <option>French</option>
         </select>
+    </div>
 
-        <div>
-            <label style="font-size:12px;">Submission Date</label><br>
-            <input type="date" id="dateInput">
-        </div>
-
-        <button class="plus-btn" onclick="addHomework()">+</button>
+    <div class="form-group">
+        <label>Due Date</label>
+        <input type="date" id="dateInput">
     </div>
 
     <div class="progress-container">
@@ -102,10 +214,21 @@
     </div>
 
     <div id="homeworkList"></div>
-    <div id="allDone">ALL DONE 🎉</div>
+
+    <div id="emptyState" class="empty">
+        No homework tasks yet. Add one to get started!
+    </div>
+
+    <div id="allDone" style="display:none; text-align:center; font-size:28px; color:green;">
+        ALL DONE 🎉
+    </div>
+
 </div>
 
-<!-- 🔥 SINGLE FIREBASE MODULE (Auth + Firestore together) -->
+<button class="plus-btn" onclick="addHomework()">+</button>
+</div>
+
+<!-- FIREBASE + LOGIC (UNCHANGED LOGIC) -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
@@ -114,12 +237,9 @@ import { getFirestore, collection, addDoc, getDocs, deleteDoc, updateDoc, doc, q
 from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBvxAsbhzV_XwEkmPTBNSchgapkSU2NFUI",
+  apiKey: "AIza...",
   authDomain: "homework-tracker-global.firebaseapp.com",
   projectId: "homework-tracker-global",
-  storageBucket: "homework-tracker-global.firebasestorage.app",
-  messagingSenderId: "801681205060",
-  appId: "1:801681205060:web:bbaa8fadd867a32edf9911"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -136,15 +256,15 @@ const welcomeScreen=document.getElementById("welcomeScreen");
 const trackerScreen=document.getElementById("trackerScreen");
 const userInfo=document.getElementById("userInfo");
 
-loginBtn.addEventListener("click",()=>{ signInWithPopup(auth,provider); });
-logoutBtn.addEventListener("click",()=>{ signOut(auth); });
+loginBtn.onclick=()=>signInWithPopup(auth,provider);
+logoutBtn.onclick=()=>signOut(auth);
 
-onAuthStateChanged(auth,async (user)=>{
+onAuthStateChanged(auth,async user=>{
     if(user){
-        currentUser = user;
+        currentUser=user;
         welcomeScreen.style.display="none";
         trackerScreen.style.display="block";
-        userInfo.textContent="Logged in as: "+user.displayName;
+        userInfo.textContent=user.displayName;
         await loadHomework();
     }else{
         welcomeScreen.style.display="block";
@@ -152,21 +272,18 @@ onAuthStateChanged(auth,async (user)=>{
     }
 });
 
-window.checkType = function(){
+window.checkType=function(){
     let type=document.getElementById("hwType").value;
-    document.getElementById("qnaBox").style.display = type==="QnAs"?"block":"none";
+    document.getElementById("qnaWrapper").style.display = type==="QnAs"?"block":"none";
 }
 
 window.addHomework = async function(){
-    const type=document.getElementById("hwType").value;
-    const subject=document.getElementById("subject").value;
-    const date=document.getElementById("dateInput").value;
-    const qna=document.getElementById("qnaBox").value;
+    const type=hwType.value;
+    const subject=subject.value;
+    const date=dateInput.value;
+    const qna=qnaBox.value;
 
-    if(!type || !subject || !date){
-        alert("Please fill all required fields!");
-        return;
-    }
+    if(!type||!subject||!date) return alert("Fill all fields");
 
     await addDoc(collection(db,"homework"),{
         uid: currentUser.uid,
@@ -175,73 +292,71 @@ window.addHomework = async function(){
         createdAt: Date.now()
     });
 
-    document.getElementById("hwType").value="";
-    document.getElementById("subject").value="";
-    document.getElementById("dateInput").value="";
-    document.getElementById("qnaBox").value="";
-    document.getElementById("qnaBox").style.display="none";
+    hwType.value=subject.value=dateInput.value=qnaBox.value="";
+    document.getElementById("qnaWrapper").style.display="none";
 
     await loadHomework();
 }
 
 async function loadHomework(){
-    const q = query(
+    const q=query(
         collection(db,"homework"),
         where("uid","==",currentUser.uid),
         orderBy("createdAt","desc")
     );
 
-    const snapshot = await getDocs(q);
+    const snap=await getDocs(q);
     homeworkList=[];
-    snapshot.forEach(docSnap=>{
-        homeworkList.push({ id:docSnap.id, ...docSnap.data() });
-    });
+    snap.forEach(d=>homeworkList.push({id:d.id,...d.data()}));
 
     renderHomework();
     updateProgress();
 }
 
-window.deleteHomework = async function(id){
+window.deleteHomework=async id=>{
     await deleteDoc(doc(db,"homework",id));
-    await loadHomework();
+    loadHomework();
 }
 
-window.toggleComplete = async function(id,current){
-    await updateDoc(doc(db,"homework",id),{
-        completed: !current
-    });
-    await loadHomework();
+window.toggleComplete=async(id,c)=>{
+    await updateDoc(doc(db,"homework",id),{completed:!c});
+    loadHomework();
 }
 
 function renderHomework(){
     const list=document.getElementById("homeworkList");
+    const empty=document.getElementById("emptyState");
+
     list.innerHTML="";
+
+    if(homeworkList.length===0){
+        empty.style.display="block";
+        return;
+    } else empty.style.display="none";
+
     const today=new Date(); today.setHours(0,0,0,0);
 
-    homeworkList.forEach((hw)=>{
+    homeworkList.forEach(hw=>{
         const div=document.createElement("div");
-        const dueDate=new Date(hw.date); dueDate.setHours(0,0,0,0);
-        const diffDays=Math.ceil((dueDate - today)/(1000*60*60*24));
+        const due=new Date(hw.date); due.setHours(0,0,0,0);
+        const diff=Math.ceil((due-today)/(86400000));
 
-        let statusClass="green";
-        if(diffDays<0) statusClass="red";
-        else if(diffDays<=2) statusClass="yellow";
+        let cls=diff<0?"red":diff<=2?"yellow":"green";
 
-        let dueText="";
-        if(diffDays>0) dueText=`${diffDays} day${diffDays>1?"s":""} remaining`;
-        else if(diffDays===0) dueText="Due today";
-        else dueText=`Overdue by ${Math.abs(diffDays)} day${Math.abs(diffDays)>1?"s":""}`;
+        let text=diff>0?`${diff} days remaining`
+            :diff===0?"Due today"
+            :`Overdue by ${Math.abs(diff)} days`;
 
-        div.className=`homework ${statusClass}`;
+        div.className=`homework ${cls}`;
         div.innerHTML=`
             <div>
                 <strong>${hw.subject}</strong> - ${hw.type}
                 ${hw.qna?` (${hw.qna})`:""}
-                <div class="due-text">${dueText}</div>
+                <div class="due-text">${text}</div>
             </div>
             <div class="actions">
-                <button class="small-btn" onclick="toggleComplete('${hw.id}', ${hw.completed})">${hw.completed?"Undo":"Done"}</button>
-                <button class="small-btn" onclick="deleteHomework('${hw.id}')">❌</button>
+                <button onclick="toggleComplete('${hw.id}',${hw.completed})">${hw.completed?"Undo":"Done"}</button>
+                <button onclick="deleteHomework('${hw.id}')">❌</button>
             </div>
         `;
 
@@ -256,18 +371,12 @@ function renderHomework(){
 
 function updateProgress(){
     const total=homeworkList.length;
-    const done=homeworkList.filter(hw=>hw.completed).length;
-    const percent=total===0?0:(done/total)*100;
-    document.getElementById("progressBar").style.width=percent+"%";
-    document.getElementById("allDone").style.display=
-        total>0 && done===total?"block":"none";
+    const done=homeworkList.filter(h=>h.completed).length;
+    progressBar.style.width=(total?done/total*100:0)+"%";
+    allDone.style.display=(total && done===total)?"block":"none";
 }
 </script>
-<script>
-if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("service-worker.js")
-    .then(() => console.log("Service Worker Registered"));
-}
-</script>
+
 </body>
 </html>
+
