@@ -22,6 +22,7 @@ body {
 
 #trackerScreen { display: none; }
 
+/* FORM */
 .form-container {
     display: flex;
     flex-direction: column;
@@ -36,6 +37,7 @@ input, select {
     width: 100%;
 }
 
+/* FLOAT BUTTON */
 .plus-btn {
     position: fixed;
     bottom: 20px;
@@ -47,6 +49,7 @@ input, select {
     color: white;
     font-size: 28px;
     border: none;
+    cursor: pointer;
 }
 
 /* CARDS */
@@ -57,6 +60,7 @@ input, select {
     border-radius: 12px;
     display: flex;
     justify-content: space-between;
+    align-items: center;
     transition: all 0.25s ease;
 }
 
@@ -70,7 +74,6 @@ input, select {
 .pop {
     animation: pop 0.25s ease forwards;
 }
-
 @keyframes pop {
     0% { transform: scale(1); }
     50% { transform: scale(1.2); }
@@ -82,6 +85,7 @@ input, select {
     background: #ddd;
     border-radius: 20px;
     overflow: hidden;
+    margin-top: 10px;
 }
 
 .progress-bar {
@@ -105,11 +109,13 @@ input, select {
 
 <body>
 
+<!-- LOGIN -->
 <div id="welcomeScreen">
     <h1>Welcome to Homework Tracker</h1>
     <button id="loginBtn">Sign in with Google</button>
 </div>
 
+<!-- APP -->
 <div id="trackerScreen">
 
 <div>
@@ -162,13 +168,31 @@ input, select {
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
-from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
-import { getFirestore, collection, addDoc, getDocs, deleteDoc, updateDoc, doc, query, where, orderBy }
-from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+import {
+    getAuth,
+    GoogleAuthProvider,
+    signInWithPopup,
+    signInWithRedirect,
+    getRedirectResult,
+    signOut,
+    onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
+
+import {
+    getFirestore,
+    collection,
+    addDoc,
+    getDocs,
+    deleteDoc,
+    updateDoc,
+    doc,
+    query,
+    where,
+    orderBy
+} from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey: "YOUR_KEY",
+  apiKey: "YOUR_API_KEY",
   authDomain: "homework-tracker-global.firebaseapp.com",
   projectId: "homework-tracker-global"
 };
@@ -178,12 +202,24 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const provider = new GoogleAuthProvider();
 
-let currentUser=null;
-let homeworkList=[];
+let currentUser = null;
+let homeworkList = [];
 
-loginBtn.onclick = ()=> signInWithPopup(auth,provider);
-logoutBtn.onclick = ()=> signOut(auth);
+/* LOGIN FIX */
+loginBtn.onclick = async () => {
+    try {
+        await signInWithPopup(auth, provider);
+    } catch (err) {
+        await signInWithRedirect(auth, provider);
+    }
+};
 
+logoutBtn.onclick = () => signOut(auth);
+
+/* REDIRECT HANDLER */
+getRedirectResult(auth).catch(()=>{});
+
+/* AUTH STATE */
 onAuthStateChanged(auth, async user=>{
     if(user){
         currentUser=user;
@@ -197,6 +233,7 @@ onAuthStateChanged(auth, async user=>{
     }
 });
 
+/* ADD */
 window.addHomework = async ()=>{
     if(!hwType.value||!subject.value||!dateInput.value) return;
 
@@ -215,6 +252,7 @@ window.addHomework = async ()=>{
     loadHomework();
 };
 
+/* LOAD */
 async function loadHomework(){
     const q = query(
         collection(db,"homework"),
@@ -229,6 +267,7 @@ async function loadHomework(){
     renderHomework();
 }
 
+/* COMPLETE */
 window.completeWithPop = function(btn,id){
     const card = btn.closest(".homework");
     card.classList.add("pop");
@@ -239,11 +278,13 @@ window.completeWithPop = function(btn,id){
     },200);
 };
 
+/* DELETE */
 window.deleteHomework = async id=>{
     await deleteDoc(doc(db,"homework",id));
     loadHomework();
 };
 
+/* RENDER */
 function renderHomework(){
     const list=document.getElementById("homeworkList");
     list.innerHTML="";
@@ -279,6 +320,7 @@ function renderHomework(){
     updateProgress();
 }
 
+/* PROGRESS */
 function updateProgress(){
     const total=homeworkList.length;
     const done=homeworkList.filter(h=>h.completed).length;
