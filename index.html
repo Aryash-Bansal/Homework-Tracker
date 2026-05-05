@@ -140,7 +140,6 @@ import {
   getAuth,
   GoogleAuthProvider,
   signInWithRedirect,
-  getRedirectResult,
   signOut,
   onAuthStateChanged,
   setPersistence,
@@ -152,7 +151,6 @@ import {
   collection,
   addDoc,
   getDocs,
-  doc,
   query,
   where,
   orderBy
@@ -172,7 +170,7 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const provider = new GoogleAuthProvider();
 
-/* 🔥 CRITICAL FIX */
+/* 🔥 FIXED: set persistence THEN wait for auth */
 await setPersistence(auth, browserLocalPersistence);
 
 /* ELEMENTS */
@@ -186,11 +184,10 @@ const userInfo = document.getElementById("userInfo");
 loginBtn.onclick = () => signInWithRedirect(auth, provider);
 logoutBtn.onclick = () => signOut(auth);
 
-/* 🔥 HANDLE REDIRECT */
-await getRedirectResult(auth);
-
-/* 🔥 AUTH STATE (ONLY SOURCE OF TRUTH) */
+/* 🔥 ONLY TRUST THIS */
 onAuthStateChanged(auth, async (user)=>{
+    console.log("Auth state:", user);
+
     if(user){
         welcomeScreen.style.display="none";
         trackerScreen.style.display="block";
