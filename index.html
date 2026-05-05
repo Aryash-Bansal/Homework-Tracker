@@ -188,15 +188,16 @@ import {
 } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
 /* 🔥 USE YOUR EXACT CONFIG */
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
+  apiKey: "AIzaSyBvxAsbhzV_XwEkmPTBNSchgapkSU2NFUI",
   authDomain: "homework-tracker-global.firebaseapp.com",
   projectId: "homework-tracker-global",
-  storageBucket: "homework-tracker-global.appspot.com",
-  messagingSenderId: "YOUR_ID",
-  appId: "YOUR_APP_ID"
+  storageBucket: "homework-tracker-global.firebasestorage.app",
+  messagingSenderId: "801681205060",
+  appId: "1:801681205060:web:bbaa8fadd867a32edf9911",
+  measurementId: "G-ERTQCNLFKD"
 };
-
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
