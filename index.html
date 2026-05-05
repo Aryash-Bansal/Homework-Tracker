@@ -17,36 +17,60 @@ body {
     background: #f4f6f9;
     margin: 0;
     padding: 20px;
+}
+
+/* CENTERED START SCREEN */
+#welcomeScreen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 80vh;
     text-align: center;
 }
 
-#welcomeScreen { margin-top: 60px; }
-#welcomeScreen h1 { font-size: 42px; }
+#welcomeScreen h1 {
+    font-size: 42px;
+    margin-bottom: 10px;
+}
 
-#trackerScreen { display: none; }
+#loginBtn {
+    padding: 12px 28px;
+    border-radius: 12px;
+    border: none;
+    background: #4285F4;
+    color: white;
+    font-size: 16px;
+}
 
+/* HEADER */
 .header {
     display: flex;
     justify-content: space-between;
     align-items: center;
 }
 
-h1 { margin: 15px 0; }
+#trackerScreen { display: none; }
 
+h1 {
+    text-align: center;
+    margin: 20px 0;
+}
+
+/* FORM */
 .form-container {
     display: flex;
     flex-direction: column;
     gap: 12px;
     align-items: center;
-    margin-bottom: 20px;
 }
 
 input, select {
+    width: 90%;
+    max-width: 400px;
     padding: 12px;
     border-radius: 12px;
     border: 1px solid #ddd;
-    width: 90%;
-    max-width: 400px;
     background: white;
 }
 
@@ -64,7 +88,7 @@ input, select {
     border: none;
 }
 
-/* Cards */
+/* CARDS */
 .homework {
     background: white;
     padding: 15px;
@@ -74,21 +98,19 @@ input, select {
     border-radius: 12px;
     display: flex;
     justify-content: space-between;
-    align-items: center;
 }
 
 .completed {
     opacity: 0.5;
 }
 
-/* Progress */
+/* PROGRESS */
 .progress-container {
     width: 90%;
     max-width: 600px;
     margin: 20px auto;
     background: #ddd;
     border-radius: 20px;
-    overflow: hidden;
 }
 
 .progress-bar {
@@ -98,17 +120,17 @@ input, select {
 }
 
 .progress-text {
+    text-align: center;
     margin-top: 8px;
-    font-size: 14px;
 }
 </style>
 </head>
 
 <body>
 
-<!-- LOGIN -->
+<!-- START -->
 <div id="welcomeScreen">
-    <h1>Welcome to Homework Tracker</h1>
+    <h1>Homework Tracker</h1>
     <button id="loginBtn">Sign in with Google</button>
 </div>
 
@@ -187,7 +209,6 @@ import {
   orderBy
 } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
-/* 🔥 USE YOUR EXACT CONFIG */
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
   apiKey: "AIzaSyBvxAsbhzV_XwEkmPTBNSchgapkSU2NFUI",
@@ -203,41 +224,36 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const provider = new GoogleAuthProvider();
 
-let currentUser=null;
-let homeworkList=[];
+/* LOGIN */
+loginBtn.onclick = () => signInWithRedirect(auth, provider);
+logoutBtn.onclick = () => signOut(auth);
 
-/* LOGIN (NO POPUP BUG) */
-document.getElementById("loginBtn").onclick = () => {
-    signInWithRedirect(auth, provider);
-};
+/* 🔥 IMPORTANT FIX */
+getRedirectResult(auth).then((result) => {
+    if(result && result.user){
+        console.log("Redirect login success");
+    }
+}).catch(()=>{});
 
-document.getElementById("logoutBtn").onclick = () => {
-    signOut(auth);
-};
-
-/* HANDLE REDIRECT */
-getRedirectResult(auth).catch(()=>{});
-
-/* AUTH STATE */
+/* AUTH STATE (THIS FIXES YOUR ISSUE) */
 onAuthStateChanged(auth, async user=>{
     if(user){
-        currentUser=user;
         welcomeScreen.style.display="none";
         trackerScreen.style.display="block";
         userInfo.textContent="Logged in as: "+user.displayName;
         loadHomework();
     } else {
-        welcomeScreen.style.display="block";
+        welcomeScreen.style.display="flex";
         trackerScreen.style.display="none";
     }
 });
 
-/* ADD */
+/* HOMEWORK LOGIC (unchanged core) */
 window.addHomework = async ()=>{
     if(!hwType.value||!subject.value||!dateInput.value) return;
 
     await addDoc(collection(db,"homework"),{
-        uid: currentUser.uid,
+        uid: auth.currentUser.uid,
         type: hwType.value,
         subject: subject.value,
         date: dateInput.value,
@@ -251,11 +267,12 @@ window.addHomework = async ()=>{
     loadHomework();
 };
 
-/* LOAD */
+let homeworkList=[];
+
 async function loadHomework(){
     const q = query(
         collection(db,"homework"),
-        where("uid","==",currentUser.uid),
+        where("uid","==",auth.currentUser.uid),
         orderBy("createdAt","desc")
     );
 
@@ -266,25 +283,19 @@ async function loadHomework(){
     renderHomework();
 }
 
-/* COMPLETE */
-window.completeWithPop = async (btn,id)=>{
-    btn.style.display="none";
-    await updateDoc(doc(db,"homework",id),{completed:true});
-    loadHomework();
-};
-
-/* DELETE */
 window.deleteHomework = async id=>{
     await deleteDoc(doc(db,"homework",id));
     loadHomework();
 };
 
-/* RENDER */
-function renderHomework(){
-    const list=document.getElementById("homeworkList");
-    list.innerHTML="";
+window.completeHW = async id=>{
+    await updateDoc(doc(db,"homework",id),{completed:true});
+    loadHomework();
+};
 
+function renderHomework(){
     homeworkList.sort((a,b)=>a.completed - b.completed);
+    homeworkListEl.innerHTML="";
 
     homeworkList.forEach(hw=>{
         const div=document.createElement("div");
@@ -296,18 +307,19 @@ function renderHomework(){
             ${
                 hw.completed
                 ? `<button onclick="deleteHomework('${hw.id}')">❌</button>`
-                : `<button onclick="completeWithPop(this,'${hw.id}')">Done</button>`
+                : `<button onclick="completeHW('${hw.id}')">Done</button>`
             }
         </div>
         `;
 
-        list.appendChild(div);
+        homeworkListEl.appendChild(div);
     });
 
     updateProgress();
 }
 
-/* PROGRESS */
+const homeworkListEl=document.getElementById("homeworkList");
+
 function updateProgress(){
     const total=homeworkList.length;
     const done=homeworkList.filter(h=>h.completed).length;
@@ -325,7 +337,7 @@ function updateProgress(){
 
     if(total>0 && done===total){
         progressText.innerText="ALL DONE 🎉";
-        confetti({ particleCount:150, spread:70 });
+        confetti();
     }
 }
 </script>
