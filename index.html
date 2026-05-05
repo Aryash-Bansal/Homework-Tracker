@@ -22,10 +22,7 @@ body {
 
 #trackerScreen { display: none; }
 
-h1 {
-    margin-top: 10px;
-    margin-bottom: 20px;
-}
+h1 { margin: 15px 0; }
 
 /* HEADER */
 .header {
@@ -39,7 +36,6 @@ h1 {
     display: flex;
     flex-direction: column;
     gap: 12px;
-    margin-bottom: 25px;
     align-items: center;
 }
 
@@ -77,25 +73,9 @@ input, select {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    transition: all 0.3s ease;
 }
 
-.completed {
-    opacity: 0.5;
-}
-
-.green { border-left: 5px solid green; }
-.yellow { border-left: 5px solid orange; }
-.red { border-left: 5px solid red; }
-
-/* POP */
-.pop {
-    animation: pop 0.25s ease forwards;
-}
-@keyframes pop {
-    50% { transform: scale(1.2); }
-    100% { transform: scale(0); opacity: 0; }
-}
+.completed { opacity: 0.5; }
 
 /* PROGRESS */
 .progress-container {
@@ -111,17 +91,11 @@ input, select {
     height: 18px;
     width: 0%;
     background: #4CAF50;
-    transition: width 0.4s;
 }
 
 .progress-text {
     margin-top: 8px;
     font-size: 14px;
-}
-
-.empty {
-    margin-top: 30px;
-    color: #888;
 }
 </style>
 </head>
@@ -190,6 +164,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebas
 import {
   getAuth,
   GoogleAuthProvider,
+  signInWithPopup,
   signInWithRedirect,
   getRedirectResult,
   signOut,
@@ -223,15 +198,19 @@ const provider = new GoogleAuthProvider();
 let currentUser=null;
 let homeworkList=[];
 
-/* LOGIN (NO POPUP BUG) */
-loginBtn.onclick = ()=> signInWithRedirect(auth, provider);
+/* LOGIN FIX (ROBUST) */
+document.getElementById("loginBtn").onclick = async () => {
+    try {
+        await signInWithPopup(auth, provider);
+    } catch (e) {
+        await signInWithRedirect(auth, provider);
+    }
+};
 
-logoutBtn.onclick = ()=> signOut(auth);
-
-/* HANDLE REDIRECT */
+/* HANDLE REDIRECT FIRST */
 getRedirectResult(auth).catch(()=>{});
 
-/* AUTH */
+/* AUTH STATE */
 onAuthStateChanged(auth, async user=>{
     if(user){
         currentUser=user;
@@ -244,6 +223,9 @@ onAuthStateChanged(auth, async user=>{
         trackerScreen.style.display="none";
     }
 });
+
+/* LOGOUT */
+logoutBtn.onclick = ()=> signOut(auth);
 
 /* ADD */
 window.addHomework = async ()=>{
@@ -280,14 +262,10 @@ async function loadHomework(){
 }
 
 /* COMPLETE */
-window.completeWithPop = function(btn,id){
-    const card = btn.closest(".homework");
-    card.classList.add("pop");
-
-    setTimeout(async ()=>{
-        await updateDoc(doc(db,"homework",id),{completed:true});
-        loadHomework();
-    },200);
+window.completeWithPop = async (btn,id)=>{
+    btn.style.display="none";
+    await updateDoc(doc(db,"homework",id),{completed:true});
+    loadHomework();
 };
 
 /* DELETE */
@@ -301,12 +279,6 @@ function renderHomework(){
     const list=document.getElementById("homeworkList");
     list.innerHTML="";
 
-    if(homeworkList.length===0){
-        list.innerHTML='<div class="empty">No homework yet. Add one!</div>';
-        updateProgress();
-        return;
-    }
-
     homeworkList.sort((a,b)=>a.completed - b.completed);
 
     homeworkList.forEach(hw=>{
@@ -314,9 +286,7 @@ function renderHomework(){
         div.className=`homework ${hw.completed?"completed":""}`;
 
         div.innerHTML=`
-        <div>
-            <strong>${hw.subject}</strong> - ${hw.type}
-        </div>
+        <div><strong>${hw.subject}</strong> - ${hw.type}</div>
         <div>
             ${
                 hw.completed
@@ -325,7 +295,6 @@ function renderHomework(){
             }
         </div>
         `;
-
         list.appendChild(div);
     });
 
