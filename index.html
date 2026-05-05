@@ -15,29 +15,44 @@
 body {
     font-family: Arial, sans-serif;
     background: #f4f6f9;
-    text-align: center;
-    padding: 20px;
     margin: 0;
+    padding: 20px;
+    text-align: center;
 }
 
 #trackerScreen { display: none; }
+
+h1 {
+    margin-top: 10px;
+    margin-bottom: 20px;
+}
+
+/* HEADER */
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
 
 /* FORM */
 .form-container {
     display: flex;
     flex-direction: column;
-    gap: 15px;
+    gap: 12px;
     margin-bottom: 25px;
+    align-items: center;
 }
 
 input, select {
     padding: 12px;
     border-radius: 12px;
-    border: 1px solid #ccc;
-    width: 100%;
+    border: 1px solid #ddd;
+    width: 90%;
+    max-width: 400px;
+    background: white;
 }
 
-/* FLOAT BUTTON */
+/* FAB */
 .plus-btn {
     position: fixed;
     bottom: 20px;
@@ -49,22 +64,25 @@ input, select {
     color: white;
     font-size: 28px;
     border: none;
-    cursor: pointer;
 }
 
-/* CARDS */
+/* CARD */
 .homework {
     background: white;
     padding: 15px;
-    margin-top: 12px;
+    margin: 10px auto;
+    width: 90%;
+    max-width: 600px;
     border-radius: 12px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    transition: all 0.25s ease;
+    transition: all 0.3s ease;
 }
 
-.completed { opacity: 0.5; }
+.completed {
+    opacity: 0.5;
+}
 
 .green { border-left: 5px solid green; }
 .yellow { border-left: 5px solid orange; }
@@ -75,28 +93,29 @@ input, select {
     animation: pop 0.25s ease forwards;
 }
 @keyframes pop {
-    0% { transform: scale(1); }
     50% { transform: scale(1.2); }
     100% { transform: scale(0); opacity: 0; }
 }
 
 /* PROGRESS */
 .progress-container {
+    width: 90%;
+    max-width: 600px;
+    margin: 20px auto;
     background: #ddd;
     border-radius: 20px;
     overflow: hidden;
-    margin-top: 10px;
 }
 
 .progress-bar {
     height: 18px;
     width: 0%;
     background: #4CAF50;
-    transition: width 0.4s ease;
+    transition: width 0.4s;
 }
 
 .progress-text {
-    margin: 10px 0;
+    margin-top: 8px;
     font-size: 14px;
 }
 
@@ -118,7 +137,7 @@ input, select {
 <!-- APP -->
 <div id="trackerScreen">
 
-<div>
+<div class="header">
 <span id="userInfo"></span>
 <button id="logoutBtn">Logout</button>
 </div>
@@ -128,7 +147,7 @@ input, select {
 <div class="form-container">
 
 <select id="hwType">
-<option value="">Homework Type</option>
+<option value="">Type of Homework</option>
 <option>TB Exercises</option>
 <option>QnAs</option>
 <option>Make Notes</option>
@@ -169,26 +188,25 @@ input, select {
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
 import {
-    getAuth,
-    GoogleAuthProvider,
-    signInWithPopup,
-    signInWithRedirect,
-    getRedirectResult,
-    signOut,
-    onAuthStateChanged
+  getAuth,
+  GoogleAuthProvider,
+  signInWithRedirect,
+  getRedirectResult,
+  signOut,
+  onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
 
 import {
-    getFirestore,
-    collection,
-    addDoc,
-    getDocs,
-    deleteDoc,
-    updateDoc,
-    doc,
-    query,
-    where,
-    orderBy
+  getFirestore,
+  collection,
+  addDoc,
+  getDocs,
+  deleteDoc,
+  updateDoc,
+  doc,
+  query,
+  where,
+  orderBy
 } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -202,24 +220,18 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const provider = new GoogleAuthProvider();
 
-let currentUser = null;
-let homeworkList = [];
+let currentUser=null;
+let homeworkList=[];
 
-/* LOGIN FIX */
-loginBtn.onclick = async () => {
-    try {
-        await signInWithPopup(auth, provider);
-    } catch (err) {
-        await signInWithRedirect(auth, provider);
-    }
-};
+/* LOGIN (NO POPUP BUG) */
+loginBtn.onclick = ()=> signInWithRedirect(auth, provider);
 
-logoutBtn.onclick = () => signOut(auth);
+logoutBtn.onclick = ()=> signOut(auth);
 
-/* REDIRECT HANDLER */
+/* HANDLE REDIRECT */
 getRedirectResult(auth).catch(()=>{});
 
-/* AUTH STATE */
+/* AUTH */
 onAuthStateChanged(auth, async user=>{
     if(user){
         currentUser=user;
@@ -290,7 +302,7 @@ function renderHomework(){
     list.innerHTML="";
 
     if(homeworkList.length===0){
-        list.innerHTML='<div class="empty">No homework yet</div>';
+        list.innerHTML='<div class="empty">No homework yet. Add one!</div>';
         updateProgress();
         return;
     }
