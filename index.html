@@ -14,6 +14,15 @@ body {
     padding: 20px;
 }
 
+h1 {
+    text-align: center;
+    margin: 10px 0;
+}
+
+button, select, input {
+    cursor: pointer;
+}
+
 #welcomeScreen {
     display: flex;
     flex-direction: column;
@@ -78,24 +87,47 @@ input, select {
     color: white;
     font-size: 28px;
     border: none;
-    cursor: pointer;
 }
 
 .homework {
     background: white;
     padding: 15px;
-    margin: 10px auto;
+    margin: 12px auto;
     width: 90%;
     max-width: 600px;
     border-radius: 12px;
     display: flex;
     justify-content: space-between;
+    align-items: center;
 }
 
 .strip {
     width: 6px;
+    height: 40px;
     border-radius: 6px;
     margin-right: 10px;
+}
+
+/* progress */
+.progress {
+    width: 90%;
+    max-width: 400px;
+    height: 10px;
+    background: #ddd;
+    border-radius: 20px;
+    margin: 10px auto;
+}
+
+.progress-bar {
+    height: 100%;
+    width: 0%;
+    background: #4CAF50;
+    border-radius: 20px;
+}
+
+.progress-text {
+    text-align: center;
+    font-size: 13px;
 }
 </style>
 </head>
@@ -111,7 +143,7 @@ input, select {
 
 <div class="header">
 <div id="userInfo"></div>
-<button id="logoutBtn" class="icon-btn">⎋</button>
+<button id="logoutBtn" class="icon-btn">⏻</button>
 </div>
 
 <h1>Homework Tracker</h1>
@@ -148,6 +180,9 @@ input, select {
 
 </div>
 
+<div class="progress-text" id="progressText"></div>
+<div class="progress"><div class="progress-bar" id="progressBar"></div></div>
+
 <button class="plus-btn" onclick="addHomework()">+</button>
 
 <div id="homeworkList"></div>
@@ -179,118 +214,151 @@ where
 } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
 const app = initializeApp({
-apiKey:"AIzaSyBvxAsbhzV_XwEkmPTBNSchgapkSU2NFUI",
-authDomain:"homework-tracker-global.firebaseapp.com",
-projectId:"homework-tracker-global"
+apiKey: "AIzaSyBvxAsbhzV_XwEkmPTBNSchgapkSU2NFUI",
+authDomain: "homework-tracker-global.firebaseapp.com",
+projectId: "homework-tracker-global"
 });
 
-const auth=getAuth(app);
-const db=getFirestore(app);
-const provider=new GoogleAuthProvider();
+const auth = getAuth(app);
+const db = getFirestore(app);
+const provider = new GoogleAuthProvider();
 
-await setPersistence(auth,browserLocalPersistence);
+await setPersistence(auth, browserLocalPersistence);
 
 /* LOGIN */
-document.getElementById("loginBtn").onclick=()=>signInWithPopup(auth,provider);
-document.getElementById("logoutBtn").onclick=()=>signOut(auth);
+document.getElementById("loginBtn").onclick = () => signInWithPopup(auth, provider);
+document.getElementById("logoutBtn").onclick = () => signOut(auth);
 
-let hwData=[];
+let hwData = [];
 
-/* SUBJECT LOGIC FIX (NO DUPLICATES) */
-document.getElementById("subject").onchange=()=>{
-const v=subject.value;
-const box=document.getElementById("extraField");
-box.innerHTML="";
+/* dynamic fields fix */
+document.getElementById("subject").onchange = () => {
+const v = subject.value;
+const box = document.getElementById("extraField");
+box.innerHTML = "";
 
-if(v==="QnAs"){
-box.innerHTML=`<input id="qCount" placeholder="Number of questions">`;
+if (v === "QnAs") {
+box.innerHTML = `<input id="qCount" placeholder="Number of questions">`;
 }
 
-if(v==="Maths"){
-box.innerHTML=`<input id="mCount" placeholder="Number of exercises">`;
+if (v === "Maths") {
+box.innerHTML = `<input id="mCount" placeholder="Number of exercises">`;
 }
 };
 
-window.addHomework=async()=>{
-const u=auth.currentUser;
-if(!u)return;
+/* add homework */
+window.addHomework = async () => {
+const u = auth.currentUser;
+if (!u) return;
 
-if(!hwType.value || !subject.value || !dateInput.value){
+if (!hwType.value || !subject.value || !dateInput.value) {
 alert("Fill all fields");
 return;
 }
 
-await addDoc(collection(db,"homework"),{
-uid:u.uid,
-type:hwType.value,
-subject:subject.value,
-date:dateInput.value,
-done:false,
-createdAt:Date.now()
+await addDoc(collection(db, "homework"), {
+uid: u.uid,
+type: hwType.value,
+subject: subject.value,
+date: dateInput.value,
+done: false,
+createdAt: Date.now()
 });
 
 load();
 };
 
-function color(days){
-if(days<0)return"red";
-if(days<=2)return"yellow";
-return"green";
+/* color logic */
+function color(days) {
+if (days < 0) return "red";
+if (days <= 2) return "yellow";
+return "green";
 }
 
-async function load(){
-const u=auth.currentUser;
-if(!u)return;
+/* load */
+async function load() {
+const u = auth.currentUser;
+if (!u) return;
 
-const q=query(collection(db,"homework"),where("uid","==",u.uid));
-const snap=await getDocs(q);
+const q = query(collection(db, "homework"), where("uid", "==", u.uid));
+const snap = await getDocs(q);
 
-hwData=[];
-snap.forEach(d=>hwData.push({id:d.id,...d.data()}));
+hwData = [];
+snap.forEach(d => hwData.push({ id: d.id, ...d.data() }));
 
 render();
 }
 
-function render(){
-const list=document.getElementById("homeworkList");
-list.innerHTML="";
+/* render */
+function render() {
+const list = document.getElementById("homeworkList");
+list.innerHTML = "";
 
-hwData.sort((a,b)=>a.done-b.done);
+hwData.sort((a, b) => a.done - b.done);
 
-hwData.forEach(h=>{
-const days=Math.ceil((new Date(h.date)-new Date())/86400000);
+hwData.forEach(h => {
 
-const div=document.createElement("div");
-div.className="homework"+(h.done?" done":"");
+const days = Math.ceil((new Date(h.date) - new Date()) / 86400000);
 
-div.innerHTML=`
+const div = document.createElement("div");
+div.className = "homework";
+
+div.innerHTML = `
 <div class="strip" style="background:${color(days)}"></div>
 
 <div>
 <b>${h.subject} - ${h.type}</b><br>
-<small>${days>=0?days+" days left":"Overdue"}</small>
+<small>${days >= 0 ? days + " days left" : "Overdue"}</small>
 </div>
 
 <div>
-<button onclick="mark('${h.id}')">Done</button>
+${h.done ? "✔" : `<button onclick="mark('${h.id}')">Done</button>`}
 </div>
 `;
 
 list.appendChild(div);
 });
+
+/* progress */
+let done = hwData.filter(h => h.done).length;
+let total = hwData.length;
+let pct = total ? Math.round((done / total) * 100) : 0;
+
+document.getElementById("progressBar").style.width = pct + "%";
+
+if (total === 0) {
+document.getElementById("progressText").innerText =
+"This bar shows ur hw progress";
+}
+else if (done === 0) {
+document.getElementById("progressText").innerText =
+"Finish hw to increase ur progress";
+}
+else {
+document.getElementById("progressText").innerText =
+pct + "% completed";
 }
 
-window.mark=(id)=>{
-const h=hwData.find(x=>x.id===id);
-if(h)h.done=true;
+if (pct === 100 && total > 1) {
+confetti();
+}
+}
+
+/* done fix */
+window.mark = (id) => {
+hwData = hwData.map(h => {
+if (h.id === id) h.done = true;
+return h;
+});
 render();
 };
 
-onAuthStateChanged(auth,u=>{
-if(u){
-welcomeScreen.style.display="none";
-trackerScreen.style.display="block";
-userInfo.textContent="Currently signed in as "+u.displayName;
+/* auth */
+onAuthStateChanged(auth, u => {
+if (u) {
+welcomeScreen.style.display = "none";
+trackerScreen.style.display = "block";
+userInfo.textContent = "Currently signed in as " + u.displayName;
 load();
 }
 });
