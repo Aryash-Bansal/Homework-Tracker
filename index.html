@@ -14,9 +14,7 @@ body {
     padding: 20px;
 }
 
-h1 {
-    text-align: center;
-}
+h1 { text-align: center; }
 
 #welcomeScreen {
     display: flex;
@@ -93,13 +91,6 @@ input, select {
     align-items: center;
 }
 
-.strip {
-    width: 6px;
-    height: 40px;
-    border-radius: 6px;
-    margin-right: 10px;
-}
-
 .progress {
     width: 90%;
     max-width: 400px;
@@ -165,8 +156,6 @@ input, select {
 <option>French</option>
 </select>
 
-<div id="extraField"></div>
-
 <input type="date" id="dateInput">
 
 </div>
@@ -185,7 +174,8 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebas
 import {
 getAuth,
 GoogleAuthProvider,
-signInWithPopup,
+signInWithRedirect,
+getRedirectResult,
 signOut,
 onAuthStateChanged,
 setPersistence,
@@ -201,7 +191,7 @@ query,
 where
 } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
-/* FIREBASE INIT */
+/* FIREBASE */
 const app = initializeApp({
 apiKey: "AIzaSyBvxAsbhzV_XwEkmPTBNSchgapkSU2NFUI",
 authDomain: "homework-tracker-global.firebaseapp.com",
@@ -212,13 +202,11 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const provider = new GoogleAuthProvider();
 
-/* WAIT FOR AUTH STORAGE */
+/* SAFE INIT */
 await setPersistence(auth, browserLocalPersistence);
+await getRedirectResult(auth);
 
-/* WAIT UNTIL DOM IS READY (CRITICAL FIX) */
-window.addEventListener("DOMContentLoaded", () => {
-
-/* ELEMENTS */
+/* DOM */
 const loginBtn = document.getElementById("loginBtn");
 const logoutBtn = document.getElementById("logoutBtn");
 const addBtn = document.getElementById("addBtn");
@@ -230,30 +218,18 @@ const dateInput = document.getElementById("dateInput");
 const progressBar = document.getElementById("progressBar");
 const progressText = document.getElementById("progressText");
 
-let hwData = [];
-
 /* LOGIN */
-loginBtn.onclick = async () => {
-try {
-await signInWithPopup(auth, provider);
-console.log("Login success");
-} catch (e) {
-console.error("LOGIN ERROR:", e);
-alert("Login failed: " + e.message);
-}
-};
-/* LOGOUT (FIXED) */
-logoutBtn.onclick = async () => {
-try {
-await signOut(auth);
-} catch (e) {
-console.error(e);
-}
+loginBtn.onclick = () => {
+signInWithRedirect(auth, provider);
 };
 
-/* ADD BUTTON (FIXED) */
+/* LOGOUT */
+logoutBtn.onclick = async () => {
+await signOut(auth);
+};
+
+/* ADD */
 addBtn.onclick = async () => {
-try {
 const user = auth.currentUser;
 if (!user) return;
 
@@ -272,10 +248,6 @@ createdAt: Date.now()
 });
 
 load();
-
-} catch (e) {
-console.error("ADD ERROR:", e);
-}
 };
 
 /* LOAD */
@@ -286,14 +258,14 @@ if (!user) return;
 const q = query(collection(db, "homework"), where("uid", "==", user.uid));
 const snap = await getDocs(q);
 
-hwData = [];
+let hwData = [];
 snap.forEach(d => hwData.push({ id: d.id, ...d.data() }));
 
-render();
+render(hwData);
 }
 
 /* RENDER */
-function render() {
+function render(hwData) {
 const list = document.getElementById("homeworkList");
 list.innerHTML = "";
 
@@ -301,14 +273,10 @@ hwData.forEach(h => {
 const div = document.createElement("div");
 div.className = "homework";
 
-div.innerHTML = `
-<b>${h.subject} - ${h.type}</b>
-`;
-
+div.innerHTML = `<b>${h.subject} - ${h.type}</b>`;
 list.appendChild(div);
 });
 
-/* progress */
 const done = hwData.filter(h => h.done).length;
 const total = hwData.length;
 
@@ -324,8 +292,8 @@ total === 0
 : pct + "% completed";
 }
 
-/* AUTH STATE */
-onAuthStateChanged(auth, (user) => {
+/* AUTH */
+onAuthStateChanged(auth, user => {
 if (user) {
 document.getElementById("welcomeScreen").style.display = "none";
 document.getElementById("trackerScreen").style.display = "block";
@@ -336,79 +304,6 @@ document.getElementById("userInfo").textContent =
 load();
 }
 });
-
-});
-/* LOAD */
-async function load() {
-if (!auth.currentUser) return;
-
-const q = query(collection(db, "homework"), where("uid", "==", auth.currentUser.uid));
-const snap = await getDocs(q);
-
-hwData = [];
-snap.forEach(d => hwData.push({ id: d.id, ...d.data() }));
-
-render();
-}
-
-/* RENDER */
-function render() {
-const list = document.getElementById("homeworkList");
-list.innerHTML = "";
-
-hwData.sort((a,b) => a.done - b.done);
-
-hwData.forEach(h => {
-
-const days = Math.ceil((new Date(h.date) - new Date()) / 86400000);
-
-const div = document.createElement("div");
-div.className = "homework";
-
-div.innerHTML = `
-<div class="strip" style="background:${days < 0 ? 'red' : days <= 2 ? 'yellow' : 'green'}"></div>
-
-<div>
-<b>${h.subject} - ${h.type}</b><br>
-<small>${days >= 0 ? days + " days left" : "Overdue"}</small>
-</div>
-
-<div>
-${h.done
-? `<button onclick="deleteHW('${h.id}')">✖</button>`
-: `<button onclick="markDone('${h.id}')">Done</button>`}
-</div>
-`;
-
-list.appendChild(div);
-});
-
-/* PROGRESS */
-let done = hwData.filter(h => h.done).length;
-let total = hwData.length;
-
-let pct = total ? Math.round((done / total) * 100) : 0;
-
-progressBar.style.width = pct + "%";
-
-progressText.textContent =
-total === 0
-? "This progress bar shows your homework progress"
-: done === 0
-? "Finish your homework to increase your progress"
-: pct + "% completed";
-}
-
-/* GLOBAL ACTIONS */
-window.markDone = (id) => {
-hwData = hwData.map(h => h.id === id ? { ...h, done: true } : h);
-render();
-};
-
-window.deleteHW = (id) => {
-hwData = hwData.filter(h => h.id !== id);
-render();
-};
 </script>
 
 </body>
