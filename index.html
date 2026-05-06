@@ -191,7 +191,7 @@ query,
 where
 } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
-/* FIREBASE */
+/* INIT */
 const app = initializeApp({
 apiKey: "AIzaSyBvxAsbhzV_XwEkmPTBNSchgapkSU2NFUI",
 authDomain: "homework-tracker-global.firebaseapp.com",
@@ -202,21 +202,18 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const provider = new GoogleAuthProvider();
 
-/* SAFE INIT */
 await setPersistence(auth, browserLocalPersistence);
-await getRedirectResult(auth);
 
-/* DOM */
+/* UI ELEMENTS */
 const loginBtn = document.getElementById("loginBtn");
 const logoutBtn = document.getElementById("logoutBtn");
-const addBtn = document.getElementById("addBtn");
 
-const hwType = document.getElementById("hwType");
-const subject = document.getElementById("subject");
-const dateInput = document.getElementById("dateInput");
+/* IMPORTANT: BLOCK UI UNTIL AUTH IS READY */
+let authReady = false;
+let currentUser = null;
 
-const progressBar = document.getElementById("progressBar");
-const progressText = document.getElementById("progressText");
+/* HANDLE REDIRECT RESULT */
+await getRedirectResult(auth);
 
 /* LOGIN */
 loginBtn.onclick = () => {
@@ -228,72 +225,12 @@ logoutBtn.onclick = async () => {
 await signOut(auth);
 };
 
-/* ADD */
-addBtn.onclick = async () => {
-const user = auth.currentUser;
-if (!user) return;
+/* CRITICAL FIX: WAIT FOR AUTH STATE PROPERLY */
+onAuthStateChanged(auth, (user) => {
 
-if (!hwType.value || !subject.value || !dateInput.value) {
-alert("Fill all fields");
-return;
-}
+authReady = true;
+currentUser = user;
 
-await addDoc(collection(db, "homework"), {
-uid: user.uid,
-type: hwType.value,
-subject: subject.value,
-date: dateInput.value,
-done: false,
-createdAt: Date.now()
-});
-
-load();
-};
-
-/* LOAD */
-async function load() {
-const user = auth.currentUser;
-if (!user) return;
-
-const q = query(collection(db, "homework"), where("uid", "==", user.uid));
-const snap = await getDocs(q);
-
-let hwData = [];
-snap.forEach(d => hwData.push({ id: d.id, ...d.data() }));
-
-render(hwData);
-}
-
-/* RENDER */
-function render(hwData) {
-const list = document.getElementById("homeworkList");
-list.innerHTML = "";
-
-hwData.forEach(h => {
-const div = document.createElement("div");
-div.className = "homework";
-
-div.innerHTML = `<b>${h.subject} - ${h.type}</b>`;
-list.appendChild(div);
-});
-
-const done = hwData.filter(h => h.done).length;
-const total = hwData.length;
-
-const pct = total ? Math.round((done / total) * 100) : 0;
-
-progressBar.style.width = pct + "%";
-
-progressText.textContent =
-total === 0
-? "This progress bar shows your homework progress"
-: done === 0
-? "Finish your homework to increase your progress"
-: pct + "% completed";
-}
-
-/* AUTH */
-onAuthStateChanged(auth, user => {
 if (user) {
 document.getElementById("welcomeScreen").style.display = "none";
 document.getElementById("trackerScreen").style.display = "block";
@@ -302,6 +239,9 @@ document.getElementById("userInfo").textContent =
 "Currently signed in as " + user.displayName;
 
 load();
+} else {
+document.getElementById("welcomeScreen").style.display = "flex";
+document.getElementById("trackerScreen").style.display = "none";
 }
 });
 </script>
