@@ -201,6 +201,7 @@ query,
 where
 } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
+/* FIREBASE INIT */
 const app = initializeApp({
 apiKey: "AIzaSyBvxAsbhzV_XwEkmPTBNSchgapkSU2NFUI",
 authDomain: "homework-tracker-global.firebaseapp.com",
@@ -211,35 +212,45 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const provider = new GoogleAuthProvider();
 
-/* STATE */
-let hwData = [];
-let currentUser = null;
-
-/* KEEP AUTH SAFE */
+/* WAIT FOR AUTH STORAGE */
 await setPersistence(auth, browserLocalPersistence);
+
+/* WAIT UNTIL DOM IS READY (CRITICAL FIX) */
+window.addEventListener("DOMContentLoaded", () => {
 
 /* ELEMENTS */
 const loginBtn = document.getElementById("loginBtn");
 const logoutBtn = document.getElementById("logoutBtn");
 const addBtn = document.getElementById("addBtn");
+
 const hwType = document.getElementById("hwType");
 const subject = document.getElementById("subject");
 const dateInput = document.getElementById("dateInput");
+
+const progressBar = document.getElementById("progressBar");
+const progressText = document.getElementById("progressText");
+
+let hwData = [];
 
 /* LOGIN */
 loginBtn.onclick = () => {
 signInWithPopup(auth, provider);
 };
 
-/* LOGOUT (FIXED REAL ISSUE) */
+/* LOGOUT (FIXED) */
 logoutBtn.onclick = async () => {
-if (!auth.currentUser) return;
+try {
 await signOut(auth);
+} catch (e) {
+console.error(e);
+}
 };
 
-/* ADD (FIXED REAL ISSUE) */
+/* ADD BUTTON (FIXED) */
 addBtn.onclick = async () => {
-if (!auth.currentUser) return;
+try {
+const user = auth.currentUser;
+if (!user) return;
 
 if (!hwType.value || !subject.value || !dateInput.value) {
 alert("Fill all fields");
@@ -247,7 +258,7 @@ return;
 }
 
 await addDoc(collection(db, "homework"), {
-uid: auth.currentUser.uid,
+uid: user.uid,
 type: hwType.value,
 subject: subject.value,
 date: dateInput.value,
@@ -256,13 +267,61 @@ createdAt: Date.now()
 });
 
 load();
+
+} catch (e) {
+console.error("ADD ERROR:", e);
+}
 };
 
-/* AUTH */
-onAuthStateChanged(auth, user => {
-if (user) {
-currentUser = user;
+/* LOAD */
+async function load() {
+const user = auth.currentUser;
+if (!user) return;
 
+const q = query(collection(db, "homework"), where("uid", "==", user.uid));
+const snap = await getDocs(q);
+
+hwData = [];
+snap.forEach(d => hwData.push({ id: d.id, ...d.data() }));
+
+render();
+}
+
+/* RENDER */
+function render() {
+const list = document.getElementById("homeworkList");
+list.innerHTML = "";
+
+hwData.forEach(h => {
+const div = document.createElement("div");
+div.className = "homework";
+
+div.innerHTML = `
+<b>${h.subject} - ${h.type}</b>
+`;
+
+list.appendChild(div);
+});
+
+/* progress */
+const done = hwData.filter(h => h.done).length;
+const total = hwData.length;
+
+const pct = total ? Math.round((done / total) * 100) : 0;
+
+progressBar.style.width = pct + "%";
+
+progressText.textContent =
+total === 0
+? "This progress bar shows your homework progress"
+: done === 0
+? "Finish your homework to increase your progress"
+: pct + "% completed";
+}
+
+/* AUTH STATE */
+onAuthStateChanged(auth, (user) => {
+if (user) {
 document.getElementById("welcomeScreen").style.display = "none";
 document.getElementById("trackerScreen").style.display = "block";
 
@@ -273,6 +332,7 @@ load();
 }
 });
 
+});
 /* LOAD */
 async function load() {
 if (!auth.currentUser) return;
