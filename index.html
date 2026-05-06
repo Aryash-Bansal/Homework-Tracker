@@ -233,10 +233,15 @@ const progressText = document.getElementById("progressText");
 let hwData = [];
 
 /* LOGIN */
-loginBtn.onclick = () => {
-signInWithPopup(auth, provider);
+loginBtn.onclick = async () => {
+try {
+await signInWithPopup(auth, provider);
+console.log("Login success");
+} catch (e) {
+console.error("LOGIN ERROR:", e);
+alert("Login failed: " + e.message);
+}
 };
-
 /* LOGOUT (FIXED) */
 logoutBtn.onclick = async () => {
 try {
