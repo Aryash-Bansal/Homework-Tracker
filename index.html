@@ -8,14 +8,10 @@
 
 <style>
 body {
-    font-family: Arial;
+    font-family: Arial, sans-serif;
     background: #f4f6f9;
     margin: 0;
     padding: 20px;
-}
-
-button, select, input {
-    cursor: pointer;
 }
 
 #welcomeScreen {
@@ -24,6 +20,14 @@ button, select, input {
     align-items: center;
     justify-content: center;
     height: 80vh;
+}
+
+#loginBtn {
+    padding: 12px 28px;
+    border-radius: 12px;
+    border: none;
+    background: #4285F4;
+    color: white;
 }
 
 #trackerScreen { display: none; }
@@ -36,7 +40,6 @@ button, select, input {
 
 #userInfo {
     font-size: 12px;
-    text-transform: none;
 }
 
 .icon-btn {
@@ -46,6 +49,7 @@ button, select, input {
     border-radius: 50%;
     width: 38px;
     height: 38px;
+    cursor: pointer;
 }
 
 .form-container {
@@ -63,55 +67,35 @@ input, select {
     border: 1px solid #ddd;
 }
 
-.extra-field {
-    width: 90%;
-    max-width: 400px;
+.plus-btn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: #4CAF50;
+    color: white;
+    font-size: 28px;
+    border: none;
+    cursor: pointer;
 }
 
-.hw-card {
+.homework {
     background: white;
-    margin: 15px auto;
+    padding: 15px;
+    margin: 10px auto;
     width: 90%;
     max-width: 600px;
-    padding: 12px;
     border-radius: 12px;
     display: flex;
-    align-items: center;
-    gap: 10px;
+    justify-content: space-between;
 }
 
 .strip {
     width: 6px;
-    height: 100%;
-    border-radius: 10px;
-}
-
-.hw-info {
-    flex: 1;
-}
-
-.done {
-    opacity: 0.5;
-}
-
-.progress {
-    width: 90%;
-    max-width: 400px;
-    height: 10px;
-    background: #ddd;
-    border-radius: 20px;
-    margin: 10px auto;
-}
-
-.progress-bar {
-    height: 100%;
-    background: #4CAF50;
-    width: 0%;
-}
-
-.progress-text {
-    text-align: center;
-    font-size: 13px;
+    border-radius: 6px;
+    margin-right: 10px;
 }
 </style>
 </head>
@@ -164,10 +148,7 @@ input, select {
 
 </div>
 
-<div class="progress-text" id="progressText"></div>
-<div class="progress"><div class="progress-bar" id="progressBar"></div></div>
-
-<button onclick="addHomework()">+</button>
+<button class="plus-btn" onclick="addHomework()">+</button>
 
 <div id="homeworkList"></div>
 
@@ -209,29 +190,35 @@ const provider=new GoogleAuthProvider();
 
 await setPersistence(auth,browserLocalPersistence);
 
-let hwData=[];
-
+/* LOGIN */
 document.getElementById("loginBtn").onclick=()=>signInWithPopup(auth,provider);
 document.getElementById("logoutBtn").onclick=()=>signOut(auth);
 
-document.getElementById("subject").onchange=()=>{
-const val=subject.value;
-const box=document.getElementById("extraField");
+let hwData=[];
 
-if(val==="QnAs"){
+/* SUBJECT LOGIC FIX (NO DUPLICATES) */
+document.getElementById("subject").onchange=()=>{
+const v=subject.value;
+const box=document.getElementById("extraField");
+box.innerHTML="";
+
+if(v==="QnAs"){
 box.innerHTML=`<input id="qCount" placeholder="Number of questions">`;
 }
-else if(val==="Maths"){
+
+if(v==="Maths"){
 box.innerHTML=`<input id="mCount" placeholder="Number of exercises">`;
-}
-else{
-box.innerHTML="";
 }
 };
 
 window.addHomework=async()=>{
 const u=auth.currentUser;
 if(!u)return;
+
+if(!hwType.value || !subject.value || !dateInput.value){
+alert("Fill all fields");
+return;
+}
 
 await addDoc(collection(db,"homework"),{
 uid:u.uid,
@@ -245,7 +232,7 @@ createdAt:Date.now()
 load();
 };
 
-function getColor(days){
+function color(days){
 if(days<0)return"red";
 if(days<=2)return"yellow";
 return"green";
@@ -268,62 +255,34 @@ function render(){
 const list=document.getElementById("homeworkList");
 list.innerHTML="";
 
-let done=0;
-
 hwData.sort((a,b)=>a.done-b.done);
 
 hwData.forEach(h=>{
-
 const days=Math.ceil((new Date(h.date)-new Date())/86400000);
 
-if(h.done)done++;
+const div=document.createElement("div");
+div.className="homework"+(h.done?" done":"");
 
-const card=document.createElement("div");
-card.className="hw-card"+(h.done?" done":"");
+div.innerHTML=`
+<div class="strip" style="background:${color(days)}"></div>
 
-card.innerHTML=`
-<div class="strip" style="background:${getColor(days)}"></div>
-
-<div class="hw-info">
+<div>
 <b>${h.subject} - ${h.type}</b><br>
 <small>${days>=0?days+" days left":"Overdue"}</small>
 </div>
 
 <div>
-${h.done?"✖":`<button onclick="markDone('${h.id}')">Done</button>`}
+<button onclick="mark('${h.id}')">Done</button>
 </div>
 `;
 
-list.appendChild(card);
+list.appendChild(div);
 });
-
-let total=hwData.length;
-let pct=total?Math.round((done/total)*100):0;
-
-progressBar.style.width=pct+"%";
-
-if(total===0){
-progressText.textContent="This bar shows ur hw progress";
-}
-else if(done===0){
-progressText.textContent="Finish hw to increase ur progress";
-}
-else{
-progressText.textContent=pct+"% completed";
 }
 
-if(pct===100 && total>1){
-confetti();
-const msg=document.createElement("h2");
-msg.textContent="ALL DONE!";
-msg.style.textAlign="center";
-document.getElementById("homeworkList").prepend(msg);
-}
-}
-
-window.markDone=(id)=>{
-const item=hwData.find(h=>h.id===id);
-if(item)item.done=true;
+window.mark=(id)=>{
+const h=hwData.find(x=>x.id===id);
+if(h)h.done=true;
 render();
 };
 
@@ -331,7 +290,7 @@ onAuthStateChanged(auth,u=>{
 if(u){
 welcomeScreen.style.display="none";
 trackerScreen.style.display="block";
-userInfo.textContent="currently signed in as "+u.displayName;
+userInfo.textContent="Currently signed in as "+u.displayName;
 load();
 }
 });
