@@ -139,12 +139,11 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebas
 import {
   getAuth,
   GoogleAuthProvider,
-  signInWithRedirect,
+  signInWithPopup,
   signOut,
   onAuthStateChanged,
   setPersistence,
-  browserLocalPersistence,
-  getRedirectResult
+  browserLocalPersistence
 } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
 
 import {
@@ -171,9 +170,8 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const provider = new GoogleAuthProvider();
 
-/* 🔥 FIX: persistence + redirect recovery */
+/* 🔥 SAFE AUTH INIT */
 await setPersistence(auth, browserLocalPersistence);
-await getRedirectResult(auth);
 
 /* ELEMENTS */
 const welcomeScreen = document.getElementById("welcomeScreen");
@@ -182,8 +180,18 @@ const loginBtn = document.getElementById("loginBtn");
 const logoutBtn = document.getElementById("logoutBtn");
 const userInfo = document.getElementById("userInfo");
 
-/* LOGIN */
-loginBtn.onclick = () => signInWithPopup(auth, provider);
+/* 🚨 FORCE CLEAR ANY OLD REDIRECT STATE */
+window.history.replaceState({}, document.title, window.location.pathname);
+
+/* LOGIN (POPUP ONLY) */
+loginBtn.onclick = async () => {
+    try {
+        await signInWithPopup(auth, provider);
+    } catch (err) {
+        console.error("Login error:", err);
+    }
+};
+
 logoutBtn.onclick = () => signOut(auth);
 
 /* AUTH LISTENER */
@@ -194,7 +202,6 @@ onAuthStateChanged(auth, async (user) => {
         welcomeScreen.style.display = "none";
         trackerScreen.style.display = "block";
         userInfo.textContent = "Logged in as: " + user.displayName;
-
         await loadHomework();
     } else {
         welcomeScreen.style.display = "flex";
