@@ -71,12 +71,15 @@
     <button onclick="nextBackground()">Next Background 🎨</button>
 
     <div id="timerSection">
-        <h3>Timers</h3>
-        <input id="timerMinutes" type="number" placeholder="Minutes">
-        <button onclick="addTimer()">Add Timer</button>
-        <div id="timers"></div>
-    </div>
+    <h3>Timers</h3>
 
+    <input id="timerHours" type="number" placeholder="Hours" style="width:80px;">
+    <input id="timerMinutes" type="number" placeholder="Minutes" style="width:80px;">
+    <input id="timerSeconds" type="number" placeholder="Seconds" style="width:80px;">
+
+    <button onclick="addTimer()">Add Timer</button>
+    <div id="timers"></div>
+</div>
     <div class="form-container">
         <select id="hwType" onchange="checkType()">
             <option value="">Homework Type</option>
@@ -184,29 +187,47 @@ setInterval(()=>{
 // Timer system
 let timers=[];
 window.addTimer=function(){
-  const mins=parseInt(document.getElementById("timerMinutes").value);
-  if(!mins) return;
+  const h=parseInt(document.getElementById("timerHours").value)||0;
+  const m=parseInt(document.getElementById("timerMinutes").value)||0;
+  const s=parseInt(document.getElementById("timerSeconds").value)||0;
 
-  const id=Date.now();
-  const end=Date.now()+mins*60000;
+  const totalMs = (h*3600 + m*60 + s) * 1000;
+  if(totalMs <= 0) return;
 
-  timers.push({id,end});
+  const id = Date.now();
+  const end = Date.now() + totalMs;
+
+  timers.push({id, end});
   renderTimers();
-};
 
+  // clear inputs after adding
+  document.getElementById("timerHours").value="";
+  document.getElementById("timerMinutes").value="";
+  document.getElementById("timerSeconds").value="";
+};
 function renderTimers(){
   const div=document.getElementById("timers");
   div.innerHTML="";
 
   timers.forEach(t=>{
-    const left=Math.max(0,Math.floor((t.end-Date.now())/1000));
-    const el=document.createElement("div");
-    el.className="timer";
-    el.innerHTML=`⏳ ${left}s left`;
+    let left = Math.max(0, Math.floor((t.end - Date.now()) / 1000));
+
+    const hrs = Math.floor(left / 3600);
+    left %= 3600;
+    const mins = Math.floor(left / 60);
+    const secs = left % 60;
+
+    const format =
+      String(hrs).padStart(2,"0") + ":" +
+      String(mins).padStart(2,"0") + ":" +
+      String(secs).padStart(2,"0");
+
+    const el = document.createElement("div");
+    el.className = "timer";
+    el.innerHTML = `⏳ ${format}`;
     div.appendChild(el);
   });
 }
-
 setInterval(renderTimers,1000);
 
 // Firebase auth etc (UNCHANGED CORE BELOW)
