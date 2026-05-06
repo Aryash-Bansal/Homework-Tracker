@@ -143,7 +143,8 @@ import {
   signOut,
   onAuthStateChanged,
   setPersistence,
-  browserLocalPersistence
+  browserLocalPersistence,
+  getRedirectResult
 } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
 
 import {
@@ -170,8 +171,9 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const provider = new GoogleAuthProvider();
 
-/* 🔥 FIXED: set persistence THEN wait for auth */
+/* 🔥 FIX: persistence + redirect recovery */
 await setPersistence(auth, browserLocalPersistence);
+await getRedirectResult(auth);
 
 /* ELEMENTS */
 const welcomeScreen = document.getElementById("welcomeScreen");
@@ -184,60 +186,61 @@ const userInfo = document.getElementById("userInfo");
 loginBtn.onclick = () => signInWithRedirect(auth, provider);
 logoutBtn.onclick = () => signOut(auth);
 
-/* 🔥 ONLY TRUST THIS */
-onAuthStateChanged(auth, async (user)=>{
+/* AUTH LISTENER */
+onAuthStateChanged(auth, async (user) => {
     console.log("Auth state:", user);
 
-    if(user){
-        welcomeScreen.style.display="none";
-        trackerScreen.style.display="block";
+    if (user) {
+        welcomeScreen.style.display = "none";
+        trackerScreen.style.display = "block";
         userInfo.textContent = "Logged in as: " + user.displayName;
+
         await loadHomework();
     } else {
-        welcomeScreen.style.display="flex";
-        trackerScreen.style.display="none";
+        welcomeScreen.style.display = "flex";
+        trackerScreen.style.display = "none";
     }
 });
 
 /* HOMEWORK */
-window.addHomework = async ()=>{
-    if(!hwType.value||!subject.value||!dateInput.value) return;
+window.addHomework = async () => {
+    if (!hwType.value || !subject.value || !dateInput.value) return;
 
-    await addDoc(collection(db,"homework"),{
+    await addDoc(collection(db, "homework"), {
         uid: auth.currentUser.uid,
         type: hwType.value,
         subject: subject.value,
         date: dateInput.value,
-        completed:false,
+        completed: false,
         createdAt: Date.now()
     });
 
     loadHomework();
 };
 
-let homeworkList=[];
+let homeworkList = [];
 
-async function loadHomework(){
+async function loadHomework() {
     const q = query(
-        collection(db,"homework"),
-        where("uid","==",auth.currentUser.uid),
-        orderBy("createdAt","desc")
+        collection(db, "homework"),
+        where("uid", "==", auth.currentUser.uid),
+        orderBy("createdAt", "desc")
     );
 
     const snap = await getDocs(q);
-    homeworkList=[];
-    snap.forEach(d=>homeworkList.push({id:d.id,...d.data()}));
+    homeworkList = [];
+    snap.forEach(d => homeworkList.push({ id: d.id, ...d.data() }));
 
     renderHomework();
 }
 
-function renderHomework(){
-    const list=document.getElementById("homeworkList");
-    list.innerHTML="";
-    homeworkList.forEach(hw=>{
-        const div=document.createElement("div");
-        div.className="homework";
-        div.innerHTML=`${hw.subject} - ${hw.type}`;
+function renderHomework() {
+    const list = document.getElementById("homeworkList");
+    list.innerHTML = "";
+    homeworkList.forEach(hw => {
+        const div = document.createElement("div");
+        div.className = "homework";
+        div.innerHTML = `${hw.subject} - ${hw.type}`;
         list.appendChild(div);
     });
 }
