@@ -191,7 +191,7 @@ query,
 where
 } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
-/* INIT */
+/* FIREBASE INIT */
 const app = initializeApp({
 apiKey: "AIzaSyBvxAsbhzV_XwEkmPTBNSchgapkSU2NFUI",
 authDomain: "homework-tracker-global.firebaseapp.com",
@@ -208,40 +208,44 @@ await setPersistence(auth, browserLocalPersistence);
 const loginBtn = document.getElementById("loginBtn");
 const logoutBtn = document.getElementById("logoutBtn");
 
-/* IMPORTANT: BLOCK UI UNTIL AUTH IS READY */
-let authReady = false;
-let currentUser = null;
+/* STATE LOCK (IMPORTANT FIX) */
+let authResolved = false;
 
-/* HANDLE REDIRECT RESULT */
-await getRedirectResult(auth);
+/* STEP 1: HANDLE REDIRECT RESULT FIRST */
+try {
+const result = await getRedirectResult(auth);
+console.log("Redirect result:", result);
+} catch (e) {
+console.error(e);
+}
 
-/* LOGIN */
+/* STEP 2: LOGIN */
 loginBtn.onclick = () => {
 signInWithRedirect(auth, provider);
 };
 
-/* LOGOUT */
-logoutBtn.onclick = async () => {
-await signOut(auth);
+/* STEP 3: LOGOUT */
+logoutBtn.onclick = () => {
+signOut(auth);
 };
 
-/* CRITICAL FIX: WAIT FOR AUTH STATE PROPERLY */
+/* STEP 4: WAIT FOR AUTH BEFORE UI DECISION */
 onAuthStateChanged(auth, (user) => {
 
-authReady = true;
-currentUser = user;
+authResolved = true;
+
+const welcome = document.getElementById("welcomeScreen");
+const tracker = document.getElementById("trackerScreen");
+const info = document.getElementById("userInfo");
 
 if (user) {
-document.getElementById("welcomeScreen").style.display = "none";
-document.getElementById("trackerScreen").style.display = "block";
-
-document.getElementById("userInfo").textContent =
-"Currently signed in as " + user.displayName;
-
+welcome.style.display = "none";
+tracker.style.display = "block";
+info.textContent = "Currently signed in as " + user.displayName;
 load();
 } else {
-document.getElementById("welcomeScreen").style.display = "flex";
-document.getElementById("trackerScreen").style.display = "none";
+welcome.style.display = "flex";
+tracker.style.display = "none";
 }
 });
 </script>
