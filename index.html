@@ -43,6 +43,19 @@ body {
     align-items: center;
 }
 
+#userInfo {
+    font-size: 12px;
+}
+
+.icon-btn {
+    background: #4CAF50;
+    border: none;
+    color: white;
+    border-radius: 50%;
+    width: 38px;
+    height: 38px;
+}
+
 h1 { text-align: center; }
 
 .form-container {
@@ -58,6 +71,11 @@ input, select {
     padding: 12px;
     border-radius: 12px;
     border: 1px solid #ddd;
+}
+
+.extra-field {
+    width: 90%;
+    max-width: 400px;
 }
 
 .plus-btn {
@@ -76,12 +94,62 @@ input, select {
 .homework {
     background: white;
     padding: 15px;
-    margin: 10px auto;
+    margin: 12px auto;
     width: 90%;
     max-width: 600px;
     border-radius: 12px;
     display: flex;
     justify-content: space-between;
+    position: relative;
+    opacity: 1;
+}
+
+.homework.done {
+    opacity: 0.5;
+    text-decoration: line-through;
+}
+
+.left-bar {
+    width: 6px;
+    border-radius: 6px;
+    margin-right: 10px;
+}
+
+.hw-content {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.small {
+    font-size: 12px;
+    color: gray;
+}
+
+.bottom {
+    margin-top: 15px;
+}
+
+.progress {
+    width: 90%;
+    max-width: 400px;
+    height: 10px;
+    background: #ddd;
+    border-radius: 20px;
+    overflow: hidden;
+    margin: 10px auto;
+}
+
+.progress-bar {
+    height: 100%;
+    background: #4CAF50;
+    width: 0%;
+}
+
+.progress-text {
+    text-align: center;
+    font-size: 13px;
+    margin-bottom: 10px;
 }
 </style>
 </head>
@@ -94,14 +162,16 @@ input, select {
 </div>
 
 <div id="trackerScreen">
+
 <div class="header">
 <span id="userInfo"></span>
-<button id="logoutBtn">Logout</button>
+<button id="logoutBtn" class="icon-btn">⎋</button>
 </div>
 
 <h1>Homework Tracker</h1>
 
 <div class="form-container">
+
 <select id="hwType">
 <option value="">Type of Homework</option>
 <option>TB Exercises</option>
@@ -126,131 +196,173 @@ input, select {
 <option>French</option>
 </select>
 
-<input type="date" id="dateInput" onclick="this.showPicker()">
+<div id="dynamicFields"></div>
+
+<input type="date" id="dateInput">
+
 </div>
+
+<div class="progress-text" id="progressText">This bar shows ur hw progress</div>
+<div class="progress"><div class="progress-bar" id="progressBar"></div></div>
 
 <button class="plus-btn" onclick="addHomework()">+</button>
 
-<div id="homeworkList"></div>
+<div id="homeworkList" class="bottom"></div>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
 import {
-  getAuth,
-  GoogleAuthProvider,
-  signInWithPopup,
-  signOut,
-  onAuthStateChanged,
-  setPersistence,
-  browserLocalPersistence
+getAuth, GoogleAuthProvider, signInWithPopup,
+signOut, onAuthStateChanged, setPersistence,
+browserLocalPersistence
 } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
 
 import {
-  getFirestore,
-  collection,
-  addDoc,
-  getDocs,
-  query,
-  where,
-  orderBy
+getFirestore, collection, addDoc,
+getDocs, query, where, orderBy
 } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyBvxAsbhzV_XwEkmPTBNSchgapkSU2NFUI",
-  authDomain: "homework-tracker-global.firebaseapp.com",
-  projectId: "homework-tracker-global",
-  storageBucket: "homework-tracker-global.appspot.com",
-  messagingSenderId: "801681205060",
-  appId: "1:801681205060:web:bbaa8fadd867a32edf9911"
-};
+const app = initializeApp({
+apiKey: "AIzaSyBvxAsbhzV_XwEkmPTBNSchgapkSU2NFUI",
+authDomain: "homework-tracker-global.firebaseapp.com",
+projectId: "homework-tracker-global"
+});
 
-const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 const provider = new GoogleAuthProvider();
 
-/* 🔥 SAFE AUTH INIT */
 await setPersistence(auth, browserLocalPersistence);
 
-/* ELEMENTS */
-const welcomeScreen = document.getElementById("welcomeScreen");
-const trackerScreen = document.getElementById("trackerScreen");
 const loginBtn = document.getElementById("loginBtn");
 const logoutBtn = document.getElementById("logoutBtn");
 const userInfo = document.getElementById("userInfo");
 
-/* 🚨 FORCE CLEAR ANY OLD REDIRECT STATE */
-window.history.replaceState({}, document.title, window.location.pathname);
-
-/* LOGIN (POPUP ONLY) */
-loginBtn.onclick = async () => {
-    try {
-        await signInWithPopup(auth, provider);
-    } catch (err) {
-        console.error("Login error:", err);
-    }
-};
-
+loginBtn.onclick = () => signInWithPopup(auth, provider);
 logoutBtn.onclick = () => signOut(auth);
-
-/* AUTH LISTENER */
-onAuthStateChanged(auth, async (user) => {
-    console.log("Auth state:", user);
-
-    if (user) {
-        welcomeScreen.style.display = "none";
-        trackerScreen.style.display = "block";
-        userInfo.textContent = "Logged in as: " + user.displayName;
-        await loadHomework();
-    } else {
-        welcomeScreen.style.display = "flex";
-        trackerScreen.style.display = "none";
-    }
-});
-
-/* HOMEWORK */
-window.addHomework = async () => {
-    if (!hwType.value || !subject.value || !dateInput.value) return;
-
-    await addDoc(collection(db, "homework"), {
-        uid: auth.currentUser.uid,
-        type: hwType.value,
-        subject: subject.value,
-        date: dateInput.value,
-        completed: false,
-        createdAt: Date.now()
-    });
-
-    loadHomework();
-};
 
 let homeworkList = [];
 
-async function loadHomework() {
-    const q = query(
-        collection(db, "homework"),
-        where("uid", "==", auth.currentUser.uid),
-        orderBy("createdAt", "desc")
-    );
+document.getElementById("subject").onchange = () => {
+const sub = subject.value;
+const div = document.getElementById("dynamicFields");
+div.innerHTML = "";
 
-    const snap = await getDocs(q);
-    homeworkList = [];
-    snap.forEach(d => homeworkList.push({ id: d.id, ...d.data() }));
+if (sub === "Maths") {
+document.getElementById("hwType").innerHTML += `<option>Maths Exercises</option>`;
+div.innerHTML += `<input id="mathCount" class="extra-field" placeholder="Number of exercises">`;
+}
+};
 
-    renderHomework();
+document.getElementById("hwType").onchange = () => {
+const div = document.getElementById("dynamicFields");
+if (hwType.value === "QnAs") {
+div.innerHTML = `<input id="qnaCount" class="extra-field" placeholder="Number of questions">`;
+}
+};
+
+window.addHomework = async () => {
+const user = auth.currentUser;
+if (!user) return;
+
+await addDoc(collection(db,"homework"),{
+uid:user.uid,
+type:hwType.value,
+subject:subject.value,
+date:dateInput.value,
+createdAt:Date.now(),
+completed:false
+});
+
+loadHomework();
+};
+
+function getStatusColor(days){
+if(days<0) return "red";
+if(days<=2) return "yellow";
+return "green";
 }
 
-function renderHomework() {
-    const list = document.getElementById("homeworkList");
-    list.innerHTML = "";
-    homeworkList.forEach(hw => {
-        const div = document.createElement("div");
-        div.className = "homework";
-        div.innerHTML = `${hw.subject} - ${hw.type}`;
-        list.appendChild(div);
-    });
+async function loadHomework(){
+const user = auth.currentUser;
+if(!user) return;
+
+const q=query(collection(db,"homework"),where("uid","==",user.uid));
+const snap=await getDocs(q);
+
+homeworkList=[];
+snap.forEach(d=>homeworkList.push({id:d.id,...d.data()}));
+
+render();
 }
+
+function render(){
+const list=document.getElementById("homeworkList");
+list.innerHTML="";
+
+homeworkList.sort((a,b)=>a.completed-b.completed);
+
+let done=0;
+
+homeworkList.forEach(hw=>{
+const days=Math.ceil((new Date(hw.date)-new Date())/(1000*60*60*24));
+if(hw.completed) done++;
+
+const div=document.createElement("div");
+div.className="homework"+(hw.completed?" done":"");
+
+div.innerHTML=`
+<div class="left-bar" style="background:${getStatusColor(days)}"></div>
+<div class="hw-content">
+<b>${hw.subject} - ${hw.type}</b>
+<span class="small">${hw.date}</span>
+</div>
+<div>
+${hw.completed ? "✖" : `<button onclick="markDone('${hw.id}')">Done</button>`}
+</div>
+`;
+
+list.appendChild(div);
+});
+
+// progress
+let total=homeworkList.length;
+
+let percent = total?Math.round((done/total)*100):0;
+
+if(total===0){
+progressText.textContent="This bar shows ur hw progress";
+progressBar.style.width="0%";
+}
+else if(done===0){
+progressText.textContent="Finish hw to increase ur progress";
+progressBar.style.width="0%";
+}
+else{
+progressText.textContent=percent+"% completed";
+progressBar.style.width=percent+"%";
+}
+
+if(percent===100 && total>1){
+confetti();
+document.body.insertAdjacentHTML("afterbegin","<h2 style='text-align:center'>ALL DONE!</h2>");
+}
+}
+
+window.markDone=(id)=>{
+homeworkList.forEach(h=>{if(h.id===id)h.completed=true});
+render();
+};
+
+onAuthStateChanged(auth,u=>{
+if(u){
+welcomeScreen.style.display="none";
+trackerScreen.style.display="block";
+userInfo.textContent="currently signed in as "+u.displayName;
+loadHomework();
+}
+});
 </script>
 
 </body>
