@@ -15,9 +15,7 @@ body {
 }
 
 h1 {
-    text-align: center !important;
-    width: 100%;
-    margin: 10px 0;
+    text-align: center;
 }
 
 #welcomeScreen {
@@ -50,7 +48,7 @@ h1 {
 }
 
 #logoutBtn {
-    padding: 8px 12px;
+    padding: 6px 10px;
     border-radius: 8px;
     border: none;
     background: #4CAF50;
@@ -71,7 +69,6 @@ input, select {
     padding: 12px;
     border-radius: 12px;
     border: 1px solid #ddd;
-    cursor: pointer;
 }
 
 .plus-btn {
@@ -188,10 +185,7 @@ input, select {
 </div>
 
 <script type="module">
-import {
-initializeApp
-} from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
-
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
 import {
 getAuth,
 GoogleAuthProvider,
@@ -223,31 +217,39 @@ const provider = new GoogleAuthProvider();
 
 await setPersistence(auth, browserLocalPersistence);
 
+/* ELEMENTS (FIXED SAFE BINDING) */
+const hwType = document.getElementById("hwType");
+const subject = document.getElementById("subject");
+const dateInput = document.getElementById("dateInput");
+const addBtn = document.getElementById("addBtn");
+const logoutBtn = document.getElementById("logoutBtn");
+
 /* LOGIN */
-document.getElementById("loginBtn").addEventListener("click", () => {
+document.getElementById("loginBtn").onclick = () => {
 signInWithPopup(auth, provider);
-});
+};
 
-/* LOGOUT */
-document.getElementById("logoutBtn").addEventListener("click", () => {
-signOut(auth);
-});
+/* LOGOUT (FIXED) */
+logoutBtn.onclick = async () => {
+await signOut(auth);
+};
 
-/* QnA FIELD ONLY */
-document.getElementById("subject").addEventListener("change", () => {
+/* QnA FIELD */
+subject.onchange = () => {
 const box = document.getElementById("extraField");
-box.innerHTML = "";
 
 if (subject.value === "QnAs") {
 box.innerHTML = `<input id="qCount" placeholder="Number of questions">`;
+} else {
+box.innerHTML = "";
 }
-});
+};
 
 /* DATA */
 let hwData = [];
 
-/* ADD HW */
-document.getElementById("addBtn").addEventListener("click", async () => {
+/* ADD HW (FIXED) */
+addBtn.onclick = async () => {
 const u = auth.currentUser;
 if (!u) return;
 
@@ -266,7 +268,7 @@ createdAt: Date.now()
 });
 
 load();
-});
+};
 
 /* LOAD */
 async function load() {
@@ -305,14 +307,15 @@ div.innerHTML = `
 </div>
 
 <div>
-${h.done ? "✔" : `<button onclick="markDone('${h.id}')">Done</button>`}
+${h.done
+? `<button onclick="deleteHW('${h.id}')">✖</button>`
+: `<button onclick="markDone('${h.id}')">Done</button>`}
 </div>
 `;
 
 list.appendChild(div);
 });
 
-/* progress */
 let done = hwData.filter(h => h.done).length;
 let total = hwData.length;
 
@@ -320,21 +323,23 @@ let pct = total ? Math.round((done / total) * 100) : 0;
 
 progressBar.style.width = pct + "%";
 
-if (total === 0) {
-progressText.textContent = "This bar shows ur hw progress";
-} else if (done === 0) {
-progressText.textContent = "Finish hw to increase ur progress";
-} else {
-progressText.textContent = pct + "% completed";
-}
+progressText.textContent =
+total === 0
+? "This bar shows ur hw progress"
+: done === 0
+? "Finish hw to increase ur progress"
+: pct + "% completed";
 }
 
-/* DONE FIX */
-window.markDone = function(id) {
-const item = hwData.find(h => h.id === id);
-if (!item) return;
+/* DONE */
+window.markDone = (id) => {
+hwData = hwData.map(h => h.id === id ? { ...h, done: true } : h);
+render();
+};
 
-item.done = true;
+/* DELETE */
+window.deleteHW = (id) => {
+hwData = hwData.filter(h => h.id !== id);
 render();
 };
 
