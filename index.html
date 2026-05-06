@@ -16,7 +16,6 @@ body {
 
 h1 {
     text-align: center;
-    margin: 10px 0;
 }
 
 #welcomeScreen {
@@ -42,10 +41,6 @@ h1 {
     display: flex;
     justify-content: space-between;
     align-items: center;
-}
-
-#userInfo {
-    font-size: 12px;
 }
 
 #logoutBtn {
@@ -216,42 +211,35 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const provider = new GoogleAuthProvider();
 
+/* STATE */
+let hwData = [];
+let currentUser = null;
+
+/* KEEP AUTH SAFE */
 await setPersistence(auth, browserLocalPersistence);
 
 /* ELEMENTS */
+const loginBtn = document.getElementById("loginBtn");
+const logoutBtn = document.getElementById("logoutBtn");
+const addBtn = document.getElementById("addBtn");
 const hwType = document.getElementById("hwType");
 const subject = document.getElementById("subject");
 const dateInput = document.getElementById("dateInput");
-const addBtn = document.getElementById("addBtn");
-const logoutBtn = document.getElementById("logoutBtn");
 
 /* LOGIN */
-document.getElementById("loginBtn").addEventListener("click", () => {
+loginBtn.onclick = () => {
 signInWithPopup(auth, provider);
-});
+};
 
-/* LOGOUT */
-logoutBtn.addEventListener("click", () => {
-signOut(auth);
-});
+/* LOGOUT (FIXED REAL ISSUE) */
+logoutBtn.onclick = async () => {
+if (!auth.currentUser) return;
+await signOut(auth);
+};
 
-/* QnA FIELD */
-subject.addEventListener("change", () => {
-const box = document.getElementById("extraField");
-box.innerHTML = "";
-
-if (subject.value === "QnAs") {
-box.innerHTML = `<input id="qCount" placeholder="Number of questions">`;
-}
-});
-
-/* DATA */
-let hwData = [];
-
-/* ADD */
-addBtn.addEventListener("click", async () => {
-const u = auth.currentUser;
-if (!u) return;
+/* ADD (FIXED REAL ISSUE) */
+addBtn.onclick = async () => {
+if (!auth.currentUser) return;
 
 if (!hwType.value || !subject.value || !dateInput.value) {
 alert("Fill all fields");
@@ -259,7 +247,7 @@ return;
 }
 
 await addDoc(collection(db, "homework"), {
-uid: u.uid,
+uid: auth.currentUser.uid,
 type: hwType.value,
 subject: subject.value,
 date: dateInput.value,
@@ -268,14 +256,28 @@ createdAt: Date.now()
 });
 
 load();
+};
+
+/* AUTH */
+onAuthStateChanged(auth, user => {
+if (user) {
+currentUser = user;
+
+document.getElementById("welcomeScreen").style.display = "none";
+document.getElementById("trackerScreen").style.display = "block";
+
+document.getElementById("userInfo").textContent =
+"Currently signed in as " + user.displayName;
+
+load();
+}
 });
 
 /* LOAD */
 async function load() {
-const u = auth.currentUser;
-if (!u) return;
+if (!auth.currentUser) return;
 
-const q = query(collection(db, "homework"), where("uid", "==", u.uid));
+const q = query(collection(db, "homework"), where("uid", "==", auth.currentUser.uid));
 const snap = await getDocs(q);
 
 hwData = [];
@@ -289,7 +291,7 @@ function render() {
 const list = document.getElementById("homeworkList");
 list.innerHTML = "";
 
-hwData.sort((a, b) => a.done - b.done);
+hwData.sort((a,b) => a.done - b.done);
 
 hwData.forEach(h => {
 
@@ -324,36 +326,24 @@ let pct = total ? Math.round((done / total) * 100) : 0;
 
 progressBar.style.width = pct + "%";
 
-if (total === 0) {
-progressText.textContent = "This progress bar shows your homework progress";
-} else if (done === 0) {
-progressText.textContent = "Finish your homework to increase your progress";
-} else {
-progressText.textContent = pct + "% completed";
-}
+progressText.textContent =
+total === 0
+? "This progress bar shows your homework progress"
+: done === 0
+? "Finish your homework to increase your progress"
+: pct + "% completed";
 }
 
-/* DONE */
+/* GLOBAL ACTIONS */
 window.markDone = (id) => {
 hwData = hwData.map(h => h.id === id ? { ...h, done: true } : h);
 render();
 };
 
-/* DELETE */
 window.deleteHW = (id) => {
 hwData = hwData.filter(h => h.id !== id);
 render();
 };
-
-/* AUTH */
-onAuthStateChanged(auth, u => {
-if (u) {
-welcomeScreen.style.display = "none";
-trackerScreen.style.display = "block";
-userInfo.textContent = "Currently signed in as " + u.displayName;
-load();
-}
-});
 </script>
 
 </body>
