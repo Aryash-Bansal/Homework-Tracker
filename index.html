@@ -191,7 +191,7 @@ query,
 where
 } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
-/* FIREBASE INIT */
+/* INIT */
 const app = initializeApp({
 apiKey: "AIzaSyBvxAsbhzV_XwEkmPTBNSchgapkSU2NFUI",
 authDomain: "homework-tracker-global.firebaseapp.com",
@@ -204,44 +204,45 @@ const provider = new GoogleAuthProvider();
 
 await setPersistence(auth, browserLocalPersistence);
 
-/* UI ELEMENTS */
+/* ELEMENTS */
+const welcome = document.getElementById("welcomeScreen");
+const tracker = document.getElementById("trackerScreen");
 const loginBtn = document.getElementById("loginBtn");
 const logoutBtn = document.getElementById("logoutBtn");
+const userInfo = document.getElementById("userInfo");
 
-/* STATE LOCK (IMPORTANT FIX) */
-let authResolved = false;
+/* IMPORTANT STATE LOCK */
+let authChecked = false;
 
-/* STEP 1: HANDLE REDIRECT RESULT FIRST */
-try {
-const result = await getRedirectResult(auth);
-console.log("Redirect result:", result);
-} catch (e) {
-console.error(e);
-}
+/* START WITH EVERYTHING HIDDEN (CRITICAL FIX) */
+welcome.style.display = "none";
+tracker.style.display = "none";
 
-/* STEP 2: LOGIN */
+/* HANDLE REDIRECT FIRST */
+await getRedirectResult(auth);
+
+/* LOGIN */
 loginBtn.onclick = () => {
 signInWithRedirect(auth, provider);
 };
 
-/* STEP 3: LOGOUT */
+/* LOGOUT */
 logoutBtn.onclick = () => {
 signOut(auth);
 };
 
-/* STEP 4: WAIT FOR AUTH BEFORE UI DECISION */
+/* SINGLE SOURCE OF TRUTH */
 onAuthStateChanged(auth, (user) => {
 
-authResolved = true;
-
-const welcome = document.getElementById("welcomeScreen");
-const tracker = document.getElementById("trackerScreen");
-const info = document.getElementById("userInfo");
+authChecked = true;
 
 if (user) {
 welcome.style.display = "none";
 tracker.style.display = "block";
-info.textContent = "Currently signed in as " + user.displayName;
+
+userInfo.textContent =
+"Currently signed in as " + user.displayName;
+
 load();
 } else {
 welcome.style.display = "flex";
