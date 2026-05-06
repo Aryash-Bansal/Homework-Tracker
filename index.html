@@ -1,22 +1,21 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#4CAF50">
-
-<title>Homework Tracker</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Homework Tracker</title>
 
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
 <style>
 body {
-    font-family: Arial, sans-serif;
+    font-family: Arial;
     background: #f4f6f9;
     margin: 0;
     padding: 20px;
+}
+
+button, select, input {
+    cursor: pointer;
 }
 
 #welcomeScreen {
@@ -25,14 +24,6 @@ body {
     align-items: center;
     justify-content: center;
     height: 80vh;
-}
-
-#loginBtn {
-    padding: 12px 28px;
-    border-radius: 12px;
-    border: none;
-    background: #4285F4;
-    color: white;
 }
 
 #trackerScreen { display: none; }
@@ -45,6 +36,7 @@ body {
 
 #userInfo {
     font-size: 12px;
+    text-transform: none;
 }
 
 .icon-btn {
@@ -55,8 +47,6 @@ body {
     width: 38px;
     height: 38px;
 }
-
-h1 { text-align: center; }
 
 .form-container {
     display: flex;
@@ -78,56 +68,30 @@ input, select {
     max-width: 400px;
 }
 
-.plus-btn {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    background: #4CAF50;
-    color: white;
-    font-size: 28px;
-    border: none;
-}
-
-.homework {
+.hw-card {
     background: white;
-    padding: 15px;
-    margin: 12px auto;
+    margin: 15px auto;
     width: 90%;
     max-width: 600px;
+    padding: 12px;
     border-radius: 12px;
     display: flex;
-    justify-content: space-between;
-    position: relative;
-    opacity: 1;
+    align-items: center;
+    gap: 10px;
 }
 
-.homework.done {
-    opacity: 0.5;
-    text-decoration: line-through;
-}
-
-.left-bar {
+.strip {
     width: 6px;
-    border-radius: 6px;
-    margin-right: 10px;
+    height: 100%;
+    border-radius: 10px;
 }
 
-.hw-content {
-    display: flex;
-    flex-direction: column;
+.hw-info {
     flex: 1;
 }
 
-.small {
-    font-size: 12px;
-    color: gray;
-}
-
-.bottom {
-    margin-top: 15px;
+.done {
+    opacity: 0.5;
 }
 
 .progress {
@@ -136,7 +100,6 @@ input, select {
     height: 10px;
     background: #ddd;
     border-radius: 20px;
-    overflow: hidden;
     margin: 10px auto;
 }
 
@@ -149,7 +112,6 @@ input, select {
 .progress-text {
     text-align: center;
     font-size: 13px;
-    margin-bottom: 10px;
 }
 </style>
 </head>
@@ -157,14 +119,14 @@ input, select {
 <body>
 
 <div id="welcomeScreen">
-    <h1>Homework Tracker</h1>
-    <button id="loginBtn">Sign in with Google</button>
+<h1>Homework Tracker</h1>
+<button id="loginBtn">Sign in with Google</button>
 </div>
 
 <div id="trackerScreen">
 
 <div class="header">
-<span id="userInfo"></span>
+<div id="userInfo"></div>
 <button id="logoutBtn" class="icon-btn">⎋</button>
 </div>
 
@@ -196,103 +158,108 @@ input, select {
 <option>French</option>
 </select>
 
-<div id="dynamicFields"></div>
+<div id="extraField"></div>
 
 <input type="date" id="dateInput">
 
 </div>
 
-<div class="progress-text" id="progressText">This bar shows ur hw progress</div>
+<div class="progress-text" id="progressText"></div>
 <div class="progress"><div class="progress-bar" id="progressBar"></div></div>
 
-<button class="plus-btn" onclick="addHomework()">+</button>
+<button onclick="addHomework()">+</button>
 
-<div id="homeworkList" class="bottom"></div>
+<div id="homeworkList"></div>
+
 </div>
 
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
 import {
-getAuth, GoogleAuthProvider, signInWithPopup,
-signOut, onAuthStateChanged, setPersistence,
+initializeApp
+} from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
+
+import {
+getAuth,
+GoogleAuthProvider,
+signInWithPopup,
+signOut,
+onAuthStateChanged,
+setPersistence,
 browserLocalPersistence
 } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
 
 import {
-getFirestore, collection, addDoc,
-getDocs, query, where, orderBy
+getFirestore,
+collection,
+addDoc,
+getDocs,
+query,
+where
 } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
 const app = initializeApp({
-apiKey: "AIzaSyBvxAsbhzV_XwEkmPTBNSchgapkSU2NFUI",
-authDomain: "homework-tracker-global.firebaseapp.com",
-projectId: "homework-tracker-global"
+apiKey:"AIzaSyBvxAsbhzV_XwEkmPTBNSchgapkSU2NFUI",
+authDomain:"homework-tracker-global.firebaseapp.com",
+projectId:"homework-tracker-global"
 });
 
-const auth = getAuth(app);
-const db = getFirestore(app);
-const provider = new GoogleAuthProvider();
+const auth=getAuth(app);
+const db=getFirestore(app);
+const provider=new GoogleAuthProvider();
 
-await setPersistence(auth, browserLocalPersistence);
+await setPersistence(auth,browserLocalPersistence);
 
-const loginBtn = document.getElementById("loginBtn");
-const logoutBtn = document.getElementById("logoutBtn");
-const userInfo = document.getElementById("userInfo");
+let hwData=[];
 
-loginBtn.onclick = () => signInWithPopup(auth, provider);
-logoutBtn.onclick = () => signOut(auth);
+document.getElementById("loginBtn").onclick=()=>signInWithPopup(auth,provider);
+document.getElementById("logoutBtn").onclick=()=>signOut(auth);
 
-let homeworkList = [];
+document.getElementById("subject").onchange=()=>{
+const val=subject.value;
+const box=document.getElementById("extraField");
 
-document.getElementById("subject").onchange = () => {
-const sub = subject.value;
-const div = document.getElementById("dynamicFields");
-div.innerHTML = "";
-
-if (sub === "Maths") {
-document.getElementById("hwType").innerHTML += `<option>Maths Exercises</option>`;
-div.innerHTML += `<input id="mathCount" class="extra-field" placeholder="Number of exercises">`;
+if(val==="QnAs"){
+box.innerHTML=`<input id="qCount" placeholder="Number of questions">`;
+}
+else if(val==="Maths"){
+box.innerHTML=`<input id="mCount" placeholder="Number of exercises">`;
+}
+else{
+box.innerHTML="";
 }
 };
 
-document.getElementById("hwType").onchange = () => {
-const div = document.getElementById("dynamicFields");
-if (hwType.value === "QnAs") {
-div.innerHTML = `<input id="qnaCount" class="extra-field" placeholder="Number of questions">`;
-}
-};
-
-window.addHomework = async () => {
-const user = auth.currentUser;
-if (!user) return;
+window.addHomework=async()=>{
+const u=auth.currentUser;
+if(!u)return;
 
 await addDoc(collection(db,"homework"),{
-uid:user.uid,
+uid:u.uid,
 type:hwType.value,
 subject:subject.value,
 date:dateInput.value,
-createdAt:Date.now(),
-completed:false
+done:false,
+createdAt:Date.now()
 });
 
-loadHomework();
+load();
 };
 
-function getStatusColor(days){
-if(days<0) return "red";
-if(days<=2) return "yellow";
-return "green";
+function getColor(days){
+if(days<0)return"red";
+if(days<=2)return"yellow";
+return"green";
 }
 
-async function loadHomework(){
-const user = auth.currentUser;
-if(!user) return;
+async function load(){
+const u=auth.currentUser;
+if(!u)return;
 
-const q=query(collection(db,"homework"),where("uid","==",user.uid));
+const q=query(collection(db,"homework"),where("uid","==",u.uid));
 const snap=await getDocs(q);
 
-homeworkList=[];
-snap.forEach(d=>homeworkList.push({id:d.id,...d.data()}));
+hwData=[];
+snap.forEach(d=>hwData.push({id:d.id,...d.data()}));
 
 render();
 }
@@ -301,57 +268,62 @@ function render(){
 const list=document.getElementById("homeworkList");
 list.innerHTML="";
 
-homeworkList.sort((a,b)=>a.completed-b.completed);
-
 let done=0;
 
-homeworkList.forEach(hw=>{
-const days=Math.ceil((new Date(hw.date)-new Date())/(1000*60*60*24));
-if(hw.completed) done++;
+hwData.sort((a,b)=>a.done-b.done);
 
-const div=document.createElement("div");
-div.className="homework"+(hw.completed?" done":"");
+hwData.forEach(h=>{
 
-div.innerHTML=`
-<div class="left-bar" style="background:${getStatusColor(days)}"></div>
-<div class="hw-content">
-<b>${hw.subject} - ${hw.type}</b>
-<span class="small">${hw.date}</span>
+const days=Math.ceil((new Date(h.date)-new Date())/86400000);
+
+if(h.done)done++;
+
+const card=document.createElement("div");
+card.className="hw-card"+(h.done?" done":"");
+
+card.innerHTML=`
+<div class="strip" style="background:${getColor(days)}"></div>
+
+<div class="hw-info">
+<b>${h.subject} - ${h.type}</b><br>
+<small>${days>=0?days+" days left":"Overdue"}</small>
 </div>
+
 <div>
-${hw.completed ? "✖" : `<button onclick="markDone('${hw.id}')">Done</button>`}
+${h.done?"✖":`<button onclick="markDone('${h.id}')">Done</button>`}
 </div>
 `;
 
-list.appendChild(div);
+list.appendChild(card);
 });
 
-// progress
-let total=homeworkList.length;
+let total=hwData.length;
+let pct=total?Math.round((done/total)*100):0;
 
-let percent = total?Math.round((done/total)*100):0;
+progressBar.style.width=pct+"%";
 
 if(total===0){
 progressText.textContent="This bar shows ur hw progress";
-progressBar.style.width="0%";
 }
 else if(done===0){
 progressText.textContent="Finish hw to increase ur progress";
-progressBar.style.width="0%";
 }
 else{
-progressText.textContent=percent+"% completed";
-progressBar.style.width=percent+"%";
+progressText.textContent=pct+"% completed";
 }
 
-if(percent===100 && total>1){
+if(pct===100 && total>1){
 confetti();
-document.body.insertAdjacentHTML("afterbegin","<h2 style='text-align:center'>ALL DONE!</h2>");
+const msg=document.createElement("h2");
+msg.textContent="ALL DONE!";
+msg.style.textAlign="center";
+document.getElementById("homeworkList").prepend(msg);
 }
 }
 
 window.markDone=(id)=>{
-homeworkList.forEach(h=>{if(h.id===id)h.completed=true});
+const item=hwData.find(h=>h.id===id);
+if(item)item.done=true;
 render();
 };
 
@@ -360,7 +332,7 @@ if(u){
 welcomeScreen.style.display="none";
 trackerScreen.style.display="block";
 userInfo.textContent="currently signed in as "+u.displayName;
-loadHomework();
+load();
 }
 });
 </script>
