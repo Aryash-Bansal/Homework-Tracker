@@ -183,7 +183,7 @@ const logoutBtn = document.getElementById("logoutBtn");
 const userInfo = document.getElementById("userInfo");
 
 /* LOGIN */
-loginBtn.onclick = () => signInWithRedirect(auth, provider);
+loginBtn.onclick = () => signInWithPopup(auth, provider);
 logoutBtn.onclick = () => signOut(auth);
 
 /* AUTH LISTENER */
