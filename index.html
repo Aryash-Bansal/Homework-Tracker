@@ -15,12 +15,9 @@ body {
 }
 
 h1 {
-    text-align: center;
+    text-align: center !important;
+    width: 100%;
     margin: 10px 0;
-}
-
-button, select, input {
-    cursor: pointer;
 }
 
 #welcomeScreen {
@@ -37,6 +34,7 @@ button, select, input {
     border: none;
     background: #4285F4;
     color: white;
+    cursor: pointer;
 }
 
 #trackerScreen { display: none; }
@@ -57,6 +55,7 @@ button, select, input {
     border: none;
     background: #4CAF50;
     color: white;
+    cursor: pointer;
 }
 
 .form-container {
@@ -72,6 +71,7 @@ input, select {
     padding: 12px;
     border-radius: 12px;
     border: 1px solid #ddd;
+    cursor: pointer;
 }
 
 .plus-btn {
@@ -85,6 +85,7 @@ input, select {
     color: white;
     font-size: 28px;
     border: none;
+    cursor: pointer;
 }
 
 .homework {
@@ -171,7 +172,6 @@ input, select {
 <option>French</option>
 </select>
 
-<!-- ONLY QnA EXTRA FIELD -->
 <div id="extraField"></div>
 
 <input type="date" id="dateInput">
@@ -223,28 +223,32 @@ const provider = new GoogleAuthProvider();
 
 await setPersistence(auth, browserLocalPersistence);
 
-/* LOGIN / LOGOUT */
-document.getElementById("loginBtn").onclick =
-() => signInWithPopup(auth, provider);
+/* LOGIN */
+document.getElementById("loginBtn").addEventListener("click", () => {
+signInWithPopup(auth, provider);
+});
 
-document.getElementById("logoutBtn").onclick =
-() => signOut(auth);
+/* LOGOUT */
+document.getElementById("logoutBtn").addEventListener("click", () => {
+signOut(auth);
+});
 
-/* QNA ONLY EXTRA FIELD */
-document.getElementById("subject").onchange = () => {
+/* QnA FIELD ONLY */
+document.getElementById("subject").addEventListener("change", () => {
 const box = document.getElementById("extraField");
+box.innerHTML = "";
 
 if (subject.value === "QnAs") {
 box.innerHTML = `<input id="qCount" placeholder="Number of questions">`;
-} else {
-box.innerHTML = "";
 }
-};
+});
+
+/* DATA */
+let hwData = [];
 
 /* ADD HW */
-document.getElementById("addBtn").onclick = async () => {
+document.getElementById("addBtn").addEventListener("click", async () => {
 const u = auth.currentUser;
-
 if (!u) return;
 
 if (!hwType.value || !subject.value || !dateInput.value) {
@@ -262,10 +266,7 @@ createdAt: Date.now()
 });
 
 load();
-};
-
-/* DATA */
-let hwData = [];
+});
 
 /* LOAD */
 async function load() {
@@ -328,12 +329,12 @@ progressText.textContent = pct + "% completed";
 }
 }
 
-/* DONE BUTTON */
-window.markDone = (id) => {
-hwData = hwData.map(h => {
-if (h.id === id) h.done = true;
-return h;
-});
+/* DONE FIX */
+window.markDone = function(id) {
+const item = hwData.find(h => h.id === id);
+if (!item) return;
+
+item.done = true;
 render();
 };
 
