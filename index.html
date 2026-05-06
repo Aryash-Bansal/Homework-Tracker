@@ -184,51 +184,135 @@ setInterval(()=>{
   alert("💡 " + q);
 },1800000);
 
-// Timer system
-let timers=[];
-window.addTimer=function(){
-  const h=parseInt(document.getElementById("timerHours").value)||0;
-  const m=parseInt(document.getElementById("timerMinutes").value)||0;
-  const s=parseInt(document.getElementById("timerSeconds").value)||0;
+// ================= TIMER SYSTEM (UPGRADED) =================
+function playBeep(){
+  const ctx = new (window.AudioContext || window.webkitAudioContext)();
+  const oscillator = ctx.createOscillator();
+  const gain = ctx.createGain();
 
-  const totalMs = (h*3600 + m*60 + s) * 1000;
-  if(totalMs <= 0) return;
+  oscillator.type = "sine";
+  oscillator.frequency.setValueAtTime(800, ctx.currentTime);
+
+  gain.gain.setValueAtTime(0.1, ctx.currentTime);
+
+  oscillator.connect(gain);
+  gain.connect(ctx.destination);
+
+  oscillator.start();
+  oscillator.stop(ctx.currentTime + 0.2);
+}
+    
+    let timers = [];
+
+// ADD TIMER
+window.addTimer = function () {
+  const h = parseInt(document.getElementById("timerHours").value) || 0;
+  const m = parseInt(document.getElementById("timerMinutes").value) || 0;
+  const s = parseInt(document.getElementById("timerSeconds").value) || 0;
+
+  const durationMs = (h * 3600 + m * 60 + s) * 1000;
+  if (durationMs <= 0) return;
 
   const id = Date.now();
-  const end = Date.now() + totalMs;
 
-  timers.push({id, end});
+ timers.push({
+  id,
+  durationMs,
+  remainingMs: durationMs,
+  end: Date.now() + durationMs,
+  paused: false,
+  fired: false
+});
+
   renderTimers();
 
-  // clear inputs after adding
-  document.getElementById("timerHours").value="";
-  document.getElementById("timerMinutes").value="";
-  document.getElementById("timerSeconds").value="";
+  document.getElementById("timerHours").value = "";
+  document.getElementById("timerMinutes").value = "";
+  document.getElementById("timerSeconds").value = "";
 };
-function renderTimers(){
-  const div=document.getElementById("timers");
-  div.innerHTML="";
 
-  timers.forEach(t=>{
-    let left = Math.max(0, Math.floor((t.end - Date.now()) / 1000));
+// PAUSE
+window.pauseTimer = function (id) {
+  const t = timers.find(x => x.id === id);
+  if (!t || t.paused) return;
+
+  t.remainingMs = t.end - Date.now();
+  t.paused = true;
+};
+
+// RESUME
+window.resumeTimer = function (id) {
+  const t = timers.find(x => x.id === id);
+  if (!t || !t.paused) return;
+
+  t.end = Date.now() + t.remainingMs;
+  t.paused = false;
+};
+
+// RESTART
+window.restartTimer = function (id) {
+  const t = timers.find(x => x.id === id);
+  if (!t) return;
+
+  t.remainingMs = t.durationMs;
+  t.end = Date.now() + t.durationMs;
+  t.paused = false;
+};
+
+// DELETE
+window.deleteTimer = function (id) {
+  timers = timers.filter(t => t.id !== id);
+};
+
+// RENDER
+function renderTimers() {
+  const div = document.getElementById("timers");
+  div.innerHTML = "";
+
+  timers.forEach(t => {
+    let left;
+
+    if (t.paused) {
+      left = Math.max(0, Math.floor(t.remainingMs / 1000));
+    } else {
+      left = Math.max(0, Math.floor((t.end - Date.now()) / 1000));
+    }
+      // trigger sound when finished (only once)
+if (left === 0 && !t.fired) {
+  playBeep();
+  t.fired = true;
+}
 
     const hrs = Math.floor(left / 3600);
-    left %= 3600;
-    const mins = Math.floor(left / 60);
+    const mins = Math.floor((left % 3600) / 60);
     const secs = left % 60;
 
     const format =
-      String(hrs).padStart(2,"0") + ":" +
-      String(mins).padStart(2,"0") + ":" +
-      String(secs).padStart(2,"0");
+      String(hrs).padStart(2, "0") + ":" +
+      String(mins).padStart(2, "0") + ":" +
+      String(secs).padStart(2, "0");
 
     const el = document.createElement("div");
     el.className = "timer";
-    el.innerHTML = `⏳ ${format}`;
+
+    el.innerHTML = `
+      <div>⏳ ${format}</div>
+      <div style="margin-top:8px; display:flex; gap:6px; justify-content:center;">
+        ${t.paused
+          ? `<button onclick="resumeTimer(${t.id})">▶ Resume</button>`
+          : `<button onclick="pauseTimer(${t.id})">⏸ Pause</button>`
+        }
+        <button onclick="restartTimer(${t.id})">🔄 Restart</button>
+        <button onclick="deleteTimer(${t.id})">❌ Delete</button>
+      </div>
+    `;
+
     div.appendChild(el);
   });
 }
-setInterval(renderTimers,1000);
+
+setInterval(renderTimers, 1000);
+// ==========================================================
 
 // Firebase auth etc (UNCHANGED CORE BELOW)
 const loginBtn=document.getElementById("loginBtn");
