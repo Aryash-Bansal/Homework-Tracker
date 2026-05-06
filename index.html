@@ -16,6 +16,7 @@ body {
 
 h1 {
     text-align: center;
+    margin: 10px 0;
 }
 
 #welcomeScreen {
@@ -48,7 +49,7 @@ h1 {
 }
 
 #logoutBtn {
-    padding: 6px 10px;
+    padding: 6px 12px;
     border-radius: 8px;
     border: none;
     background: #4CAF50;
@@ -217,7 +218,7 @@ const provider = new GoogleAuthProvider();
 
 await setPersistence(auth, browserLocalPersistence);
 
-/* ELEMENTS (FIXED SAFE BINDING) */
+/* ELEMENTS */
 const hwType = document.getElementById("hwType");
 const subject = document.getElementById("subject");
 const dateInput = document.getElementById("dateInput");
@@ -225,31 +226,30 @@ const addBtn = document.getElementById("addBtn");
 const logoutBtn = document.getElementById("logoutBtn");
 
 /* LOGIN */
-document.getElementById("loginBtn").onclick = () => {
+document.getElementById("loginBtn").addEventListener("click", () => {
 signInWithPopup(auth, provider);
-};
+});
 
-/* LOGOUT (FIXED) */
-logoutBtn.onclick = async () => {
-await signOut(auth);
-};
+/* LOGOUT */
+logoutBtn.addEventListener("click", () => {
+signOut(auth);
+});
 
 /* QnA FIELD */
-subject.onchange = () => {
+subject.addEventListener("change", () => {
 const box = document.getElementById("extraField");
+box.innerHTML = "";
 
 if (subject.value === "QnAs") {
 box.innerHTML = `<input id="qCount" placeholder="Number of questions">`;
-} else {
-box.innerHTML = "";
 }
-};
+});
 
 /* DATA */
 let hwData = [];
 
-/* ADD HW (FIXED) */
-addBtn.onclick = async () => {
+/* ADD */
+addBtn.addEventListener("click", async () => {
 const u = auth.currentUser;
 if (!u) return;
 
@@ -268,7 +268,7 @@ createdAt: Date.now()
 });
 
 load();
-};
+});
 
 /* LOAD */
 async function load() {
@@ -316,6 +316,7 @@ ${h.done
 list.appendChild(div);
 });
 
+/* PROGRESS */
 let done = hwData.filter(h => h.done).length;
 let total = hwData.length;
 
@@ -323,12 +324,13 @@ let pct = total ? Math.round((done / total) * 100) : 0;
 
 progressBar.style.width = pct + "%";
 
-progressText.textContent =
-total === 0
-? "This bar shows ur hw progress"
-: done === 0
-? "Finish hw to increase ur progress"
-: pct + "% completed";
+if (total === 0) {
+progressText.textContent = "This progress bar shows your homework progress";
+} else if (done === 0) {
+progressText.textContent = "Finish your homework to increase your progress";
+} else {
+progressText.textContent = pct + "% completed";
+}
 }
 
 /* DONE */
