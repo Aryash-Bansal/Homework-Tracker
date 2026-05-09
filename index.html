@@ -651,17 +651,33 @@ window.checkType=function(){
 }
 
 window.addHomework=async function(){
-    const type=document.getElementById("hwType").value;
-    const subject=document.getElementById("subject").value;
-    const date=document.getElementById("dateInput").value;
-    const qna=document.getElementById("qnaBox").value;
 
-    if(!type||!subject||!date){alert("Fill all fields");return;}
+    const type = document.getElementById("hwType").value;
+    const subject = document.getElementById("subject").value;
+    const date = document.getElementById("dateInput").value;
+    const qna = document.getElementById("qnaBox").value;
+
+    if(!type || !subject || !date){
+        alert("Fill all fields");
+        return;
+    }
 
     await addDoc(collection(db,"homework"),{
-        uid:currentUser.uid,type,subject,date,qna,
-        completed:false,createdAt:Date.now()
+        uid: currentUser.uid,
+        type,
+        subject,
+        date,
+        qna,
+        completed:false,
+        createdAt:Date.now()
     });
+
+    // CLEAR FIELDS
+    document.getElementById("hwType").value = "";
+    document.getElementById("subject").value = "";
+    document.getElementById("dateInput").value = "";
+    document.getElementById("qnaBox").value = "";
+    document.getElementById("qnaBox").style.display = "none";
 
     await loadHomework();
 };
