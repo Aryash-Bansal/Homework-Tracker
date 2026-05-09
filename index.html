@@ -138,7 +138,7 @@
 
     <h1>Homework Tracker</h1>
 
-    <button class="small-btn" onclick="nextBackground()">Next Background 🎨</button>
+    <button class="small-btn" onclick="nextBackground()">Next Background</button>
 
     <div id="timerSection">
     <h3>Timers</h3>
@@ -186,8 +186,12 @@
     </div>
 
     <div class="progress-container">
-        <div class="progress-bar" id="progressBar"></div>
-    </div>
+    <div class="progress-bar" id="progressBar"></div>
+</div>
+
+<div id="progressText" style="color:#4CAF50; font-weight:bold; margin-top:8px;">
+    This bar shows your homework progress.
+</div>
 
     <div id="homeworkList"></div>
     <div id="allDone">ALL DONE 🎉</div>
@@ -592,9 +596,25 @@ div.innerHTML=`
 }
 
 function updateProgress(){
-    const total=homeworkList.length;
-    const done=homeworkList.filter(h=>h.completed).length;
-    document.getElementById("progressBar").style.width=(total?done/total*100:0)+"%";
+
+    const total = homeworkList.length;
+    const done = homeworkList.filter(h => h.completed).length;
+
+    const percent = total ? Math.round((done / total) * 100) : 0;
+
+    document.getElementById("progressBar").style.width = percent + "%";
+
+    const progressText = document.getElementById("progressText");
+
+    if(total === 0){
+        progressText.textContent = "This bar shows your homework progress.";
+    }
+    else if(done === 0){
+        progressText.textContent = "Complete homework to progress this bar.";
+    }
+    else{
+        progressText.textContent = `You are ${percent}% complete with your homework`;
+    }
 }
 </script>
 
