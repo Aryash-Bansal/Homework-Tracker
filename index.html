@@ -632,7 +632,13 @@ onAuthStateChanged(auth,async(user)=>{
         welcomeScreen.style.display="none";
         trackerScreen.style.display="block";
         userInfo.textContent="Current User: " + user.displayName;
-        await loadHomework();
+        document.getElementById("hwType").value = "";
+document.getElementById("subject").value = "";
+document.getElementById("dateInput").value = "";
+document.getElementById("qnaBox").value = "";
+document.getElementById("qnaBox").style.display = "none";
+
+await loadHomework();
     }else{
         welcomeScreen.style.display="block";
         trackerScreen.style.display="none";
