@@ -252,28 +252,47 @@ const provider = new GoogleAuthProvider();
 let currentUser=null;
 let homeworkList=[];
 
-// Background rotation
+// ================= WALLPAPER SYSTEM =================
+
 const backgrounds = [
-  "#f4f6f9",
-  "#e3f2fd",
-  "#fff3e0",
-  "#f3e5f5",
-  "#e8f5e9"
+  "Wallpaper_1.jpg",
+  "Wallpaper_2.jpg",
+  "Wallpaper_3.jpg",
+  "Wallpaper_5.jpg",
+  "Wallpaper_6.jpg",
+  "Wallpaper_7.jpg",
+  "Wallpaper_8.jpg",
+  "Wallpaper_9.jpg"
 ];
+
 let bgIndex = 0;
 
 function setBackground(){
-  document.body.style.background = backgrounds[bgIndex];
+
+  document.body.style.backgroundImage = `url('${backgrounds[bgIndex]}')`;
+
+  document.body.style.backgroundSize = "cover";
+  document.body.style.backgroundPosition = "center";
+  document.body.style.backgroundRepeat = "no-repeat";
+  document.body.style.backgroundAttachment = "fixed";
 }
 
 window.nextBackground = function(){
+
   bgIndex = (bgIndex + 1) % backgrounds.length;
+
   setBackground();
 };
 
+// initial wallpaper
+setBackground();
+
+// auto rotate every 1 minute
 setInterval(()=>{
-  window.nextBackground();
-}, 1800000); // 30 min
+  nextBackground();
+}, 60000);
+
+// ====================================================
 
 // ================= MOTIVATIONAL QUOTES =================
 
