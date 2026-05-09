@@ -318,14 +318,10 @@ window.nextBackground = function(){
   setBackground();
 };
 
-// initial wallpaper
-setBackground();
-
 // auto rotate every 1 minute
 setInterval(()=>{
   nextBackground();
 }, 600000);
-
 // ====================================================
 
 // ================= MOTIVATIONAL QUOTES =================
@@ -658,6 +654,8 @@ const logoutBtn=document.getElementById("logoutBtn");
 const welcomeScreen=document.getElementById("welcomeScreen");
 const trackerScreen=document.getElementById("trackerScreen");
 const userInfo=document.getElementById("userInfo");
+
+setBackground();
 
 loginBtn.addEventListener("click",()=>{ signInWithPopup(auth,provider); });
 logoutBtn.addEventListener("click",()=>{ signOut(auth); });
