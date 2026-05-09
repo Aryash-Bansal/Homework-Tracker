@@ -497,7 +497,11 @@ async function loadHomework(){
     homeworkList=[];
     snap.forEach(d=>homeworkList.push({id:d.id,...d.data()}));
 
-    homeworkList.sort((a, b) => {
+  homeworkList.sort((a, b) => {
+
+    // completed homework always goes bottom
+    if (a.completed && !b.completed) return 1;
+    if (!a.completed && b.completed) return -1;
 
     const today = new Date();
     today.setHours(0,0,0,0);
@@ -579,6 +583,10 @@ div.innerHTML=`
 
 </div>
 `;
+        if(hw.completed){
+    div.style.opacity = "0.5";
+    div.style.filter = "grayscale(60%)";
+}
         list.appendChild(div);
     });
 }
