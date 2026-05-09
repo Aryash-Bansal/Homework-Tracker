@@ -738,7 +738,7 @@ div.innerHTML=`
 <div style="display:flex; justify-content:space-between; align-items:center; width:100%; gap:10px;">
 
     <div>
-        <strong>${hw.subject}</strong> - ${hw.type}
+        <strong>${hw.subject}</strong> - ${hw.type} ${hw.qna ? `(${hw.qna})` : ""}
         <div style="font-size:13px; color:#666; margin-top:4px;">
             ${dueText}
         </div>
