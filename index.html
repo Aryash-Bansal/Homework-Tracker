@@ -524,7 +524,28 @@ function renderHomework(){
         if(diff<0)c="red";else if(diff<=2)c="yellow";
 
         div.className="homework "+c;
-        div.innerHTML=`<div><strong>${hw.subject}</strong> - ${hw.type}</div>`;
+        div.innerHTML=`
+<div style="display:flex; justify-content:space-between; align-items:center; width:100%; gap:10px;">
+
+    <div>
+        <strong>${hw.subject}</strong> - ${hw.type}
+    </div>
+
+    <div style="display:flex; gap:8px;">
+
+        ${
+            !hw.completed
+            ? `<button class="small-btn" onclick="toggleComplete('${hw.id}', false)">✅ Done</button>`
+            : `
+                <button class="small-btn" onclick="toggleComplete('${hw.id}', true)">↩ Undo</button>
+                <button class="small-btn" onclick="deleteHomework('${hw.id}')">❌ Delete</button>
+              `
+        }
+
+    </div>
+
+</div>
+`;
         list.appendChild(div);
     });
 }
