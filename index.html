@@ -611,12 +611,10 @@ function updateProgress(){
     }
     else if(done === 0){
         progressText.textContent = "Complete homework to progress this bar.";
-  else if(percent === 100){
-    progressText.textContent = "You are completely done with your homework";
-}
-else{
-    progressText.textContent = `You are ${percent}% done with your homework`;
-}
+    }
+    else{
+        progressText.textContent = `You are ${percent}% done with your homework`;
+    }
 }
 </script>
 
