@@ -16,7 +16,26 @@
         #welcomeScreen h2 { font-size: 24px; margin-bottom: 5px; color: #555; }
         #welcomeScreen h3 { font-size: 16px; margin-bottom: 30px; color: #888; }
         #loginBtn { padding: 14px 35px; font-size: 18px; background: #4285F4; color: white; border: none; border-radius: 10px; cursor: pointer; }
-        #logoutBtn { padding: 6px 12px; font-size: 14px; cursor: pointer; }
+        #logoutBtn {
+    padding: 10px 18px;
+    font-size: 14px;
+    cursor: pointer;
+    border: none;
+    border-radius: 999px;
+    background: #4CAF50;
+    color: white;
+    font-weight: bold;
+    transition: 0.2s ease;
+}
+
+#logoutBtn:hover {
+    transform: scale(1.05);
+    background: #43a047;
+}
+
+#logoutBtn:active {
+    transform: scale(0.97);
+}
         #trackerScreen { display: none; }
         h1 { margin-bottom: 15px; }
 
@@ -35,8 +54,26 @@
         .progress-bar { height: 20px; width: 0%; background: #4CAF50; transition: width 0.4s ease; }
         #allDone { font-size: 40px; font-weight: bold; color: green; display: none; margin-top: 20px; }
 
-        .small-btn { padding: 4px 8px; font-size: 14px; cursor: pointer; }
+      .small-btn {
+    padding: 10px 18px;
+    font-size: 14px;
+    cursor: pointer;
+    border: none;
+    border-radius: 999px;
+    background: #4CAF50;
+    color: white;
+    font-weight: bold;
+    transition: 0.2s ease;
+}
 
+.small-btn:hover {
+    transform: scale(1.05);
+    background: #43a047;
+}
+
+.small-btn:active {
+    transform: scale(0.97);
+}
         /* Timer widget */
         #timerSection { width: 95%; max-width: 650px; margin: 20px auto; background: white; padding: 15px; border-radius: 10px; }
         .timer { margin: 10px 0; padding: 10px; border: 1px solid #ccc; border-radius: 8px; }
@@ -349,19 +386,18 @@ function renderTimers() {
         ${
           left === 0
           ? `
-            <button onclick="restartTimer(${t.id})">🔄 Restart</button>
-            <button onclick="stopAlarm(${t.id})">🔕 Stop Alarm</button>
+            <button class="small-btn" onclick="restartTimer(${t.id})">🔄 Restart</button>
+            <button class="small-btn" onclick="stopAlarm(${t.id})">🔕 Stop Alarm</button>
           `
           : `
             ${
               t.paused
-              ? `<button onclick="resumeTimer(${t.id})">▶ Resume</button>`
-              : `<button onclick="pauseTimer(${t.id})">⏸ Pause</button>`
+              ? `<button class="small-btn" onclick="resumeTimer(${t.id})">▶ Resume</button>`
+              : `<button class="small-btn" onclick="pauseTimer(${t.id})">⏸ Pause</button>`
             }
 
-            <button onclick="restartTimer(${t.id})">🔄 Restart</button>
-
-            <button onclick="deleteTimer(${t.id})">❌ Delete</button>
+           <button class="small-btn" onclick="restartTimer(${t.id})">🔄 Restart</button>
+            <button class="small-btn" onclick="deleteTimer(${t.id})">❌ Delete</button>
           `
         }
 
