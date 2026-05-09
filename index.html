@@ -158,7 +158,7 @@
 
 <div id="trackerScreen">
    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; width:95%; max-width:650px; margin-left:auto; margin-right:auto;">
-    <span id="userInfo" style="color:#4CAF50; font-weight:bold;"></span>
+    <span id="userInfo" style="color:#4CAF50; font-weight:bold; text-shadow: 1px 1px 2px black;"></span>
     <button id="logoutBtn">Logout</button>
 </div>
 
@@ -209,7 +209,7 @@
         </select>
 
         <div>
-            <label style="font-size:12px; color:#4CAF50; font-weight:bold;">Submission Date</label><br>
+            <label style="font-size:12px; color:#4CAF50; font-weight:bold; text-shadow: 1px 1px 2px black;">Submission Date</label><br>
             <input type="date" id="dateInput">
         </div>
 
@@ -220,7 +220,7 @@
     <div class="progress-bar" id="progressBar"></div>
 </div>
 
-<div id="progressText" style="color:#4CAF50; font-weight:bold; margin-top:8px;">
+<div id="progressText" style="color:#4CAF50; font-weight:bold; margin-top:8px; text-shadow: 1px 1px 2px black;">
     This bar shows your homework progress.
 </div>
 
@@ -754,7 +754,7 @@ div.innerHTML=`
 </div>
 `;
         if(hw.completed){
-    div.style.opacity = "0.5";
+    div.style.opacity = "0.7";
     div.style.filter = "grayscale(25%)";
 }
         list.appendChild(div);
