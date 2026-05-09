@@ -94,8 +94,22 @@
     transform: scale(0.97);
 }
         /* Timer widget */
-        #timerSection { width: 95%; max-width: 650px; margin: 20px auto; background: white; padding: 15px; border-radius: 10px; }
-        .timer { margin: 10px 0; padding: 10px; border: 1px solid #ccc; border-radius: 8px; }
+       #timerSection {
+    width: 95%;
+    max-width: 650px;
+    margin: 12px auto;
+    background: white;
+    padding: 10px;
+    border-radius: 10px;
+}
+        .timer {
+    margin: 10px auto;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    width: fit-content;
+    min-width: 320px;
+}
 
         @media (max-width: 600px) {
             #welcomeScreen h1 { font-size: 32px; }
@@ -117,10 +131,10 @@
 </div>
 
 <div id="trackerScreen">
-    <div style="margin-bottom:10px;">
-        <span id="userInfo"></span>
-        <button id="logoutBtn">Logout</button>
-    </div>
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; width:95%; max-width:650px; margin-left:auto; margin-right:auto;">
+    <span id="userInfo"></span>
+    <button id="logoutBtn">Logout</button>
+</div>
 
     <h1>Homework Tracker</h1>
 
@@ -129,10 +143,10 @@
     <div id="timerSection">
     <h3>Timers</h3>
 
-    <input id="timerHours" type="number" placeholder="Hours" style="width:80px;">
-    <input id="timerMinutes" type="number" placeholder="Minutes" style="width:80px;">
-    <input id="timerSeconds" type="number" placeholder="Seconds" style="width:80px;">
-
+    <input id="timerHours" type="number" placeholder="Hours" style="width:100px;">
+<input id="timerMinutes" type="number" placeholder="Minutes" style="width:100px;">
+<input id="timerSeconds" type="number" placeholder="Seconds" style="width:100px;">
+        
     <button class="small-btn" onclick="addTimer()">Add Timer</button>
     <div id="timers"></div>
 </div>
@@ -447,7 +461,7 @@ onAuthStateChanged(auth,async(user)=>{
         currentUser=user;
         welcomeScreen.style.display="none";
         trackerScreen.style.display="block";
-        userInfo.textContent="Logged in as: "+user.displayName;
+        userInfo.textContent="Current User: " + user.displayName;
         await loadHomework();
     }else{
         welcomeScreen.style.display="block";
