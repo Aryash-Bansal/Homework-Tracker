@@ -36,7 +36,33 @@
 #logoutBtn:active {
     transform: scale(0.97);
 }
-        #trackerScreen { display: none; }
+       #trackerScreen { display: none; }
+
+#quoteBubble{
+    background:#4CAF50;
+    color:white;
+    width:fit-content;
+    max-width:500px;
+    margin:15px auto 25px auto;
+    padding:16px 22px;
+    border-radius:20px;
+    transform:rotate(-2deg);
+    box-shadow:0 6px 18px rgba(0,0,0,0.15);
+    transition:all 0.5s ease;
+}
+
+#quoteText{
+    font-size:18px;
+    font-weight:bold;
+    line-height:1.5;
+}
+
+#quoteAuthor{
+    margin-top:10px;
+    font-size:14px;
+    opacity:0.9;
+    text-align:right;
+}
         h1 { margin-bottom: 15px; }
 
         .form-container { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 20px; }
@@ -131,9 +157,14 @@
 </div>
 
 <div id="trackerScreen">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; width:95%; max-width:650px; margin-left:auto; margin-right:auto;">
+   <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; width:95%; max-width:650px; margin-left:auto; margin-right:auto;">
     <span id="userInfo"></span>
     <button id="logoutBtn">Logout</button>
+</div>
+
+<div id="quoteBubble">
+    <div id="quoteText"></div>
+    <div id="quoteAuthor"></div>
 </div>
 
     <h1>Homework Tracker</h1>
@@ -244,20 +275,135 @@ setInterval(()=>{
   window.nextBackground();
 }, 1800000); // 30 min
 
-// Motivational popup
-const quotes=[
-"Keep going, you're doing great!",
-"Small progress is still progress!",
-"You got this!",
-"Discipline beats motivation.",
-"One task at a time!"
+// ================= MOTIVATIONAL QUOTES =================
+
+const quotes = [
+
+{ quote:"Success is not final, failure is not fatal: it is the courage to continue that counts.", author:"Winston Churchill" },
+{ quote:"The future depends on what you do today.", author:"Mahatma Gandhi" },
+{ quote:"Believe you can and you're halfway there.", author:"Theodore Roosevelt" },
+{ quote:"Do what you can, with what you have, where you are.", author:"Theodore Roosevelt" },
+{ quote:"Dream big and dare to fail.", author:"Norman Vaughan" },
+{ quote:"Hard work beats talent when talent doesn’t work hard.", author:"Tim Notke" },
+{ quote:"Push yourself, because no one else is going to do it for you.", author:"Unknown" },
+{ quote:"Great things never come from comfort zones.", author:"Unknown" },
+{ quote:"Don’t stop until you’re proud.", author:"Unknown" },
+{ quote:"Discipline is choosing between what you want now and what you want most.", author:"Abraham Lincoln" },
+
+{ quote:"Success usually comes to those who are too busy to be looking for it.", author:"Henry David Thoreau" },
+{ quote:"Small daily improvements are the key to staggering long-term results.", author:"Robin Sharma" },
+{ quote:"Action is the foundational key to all success.", author:"Pablo Picasso" },
+{ quote:"The expert in anything was once a beginner.", author:"Helen Hayes" },
+{ quote:"The secret of getting ahead is getting started.", author:"Mark Twain" },
+{ quote:"You miss 100% of the shots you don’t take.", author:"Wayne Gretzky" },
+{ quote:"Quality is not an act, it is a habit.", author:"Aristotle" },
+{ quote:"A year from now you may wish you had started today.", author:"Karen Lamb" },
+{ quote:"Your limitation—it’s only your imagination.", author:"Unknown" },
+{ quote:"Work hard in silence, let success make the noise.", author:"Frank Ocean" },
+
+{ quote:"Doubt kills more dreams than failure ever will.", author:"Suzy Kassem" },
+{ quote:"If you get tired, learn to rest, not quit.", author:"Banksy" },
+{ quote:"Focus on the step in front of you, not the whole staircase.", author:"Unknown" },
+{ quote:"Stay patient and trust your journey.", author:"Unknown" },
+{ quote:"Success doesn’t come from what you do occasionally, but what you do consistently.", author:"Marie Forleo" },
+{ quote:"You don’t have to be extreme, just consistent.", author:"Unknown" },
+{ quote:"The pain you feel today will be the strength you feel tomorrow.", author:"Unknown" },
+{ quote:"Make each day your masterpiece.", author:"John Wooden" },
+{ quote:"Opportunities don’t happen. You create them.", author:"Chris Grosser" },
+{ quote:"Do something today that your future self will thank you for.", author:"Unknown" },
+
+{ quote:"Everything you’ve ever wanted is on the other side of fear.", author:"George Addair" },
+{ quote:"Learn as if you will live forever.", author:"Mahatma Gandhi" },
+{ quote:"Don’t limit your challenges. Challenge your limits.", author:"Unknown" },
+{ quote:"Difficult roads often lead to beautiful destinations.", author:"Unknown" },
+{ quote:"The comeback is always stronger than the setback.", author:"Unknown" },
+{ quote:"Be stronger than your excuses.", author:"Unknown" },
+{ quote:"Stay hungry. Stay foolish.", author:"Steve Jobs" },
+{ quote:"Done is better than perfect.", author:"Sheryl Sandberg" },
+{ quote:"It always seems impossible until it’s done.", author:"Nelson Mandela" },
+{ quote:"A little progress each day adds up to big results.", author:"Satya Nani" },
+
+{ quote:"You are capable of amazing things.", author:"Unknown" },
+{ quote:"The harder you work for something, the greater you’ll feel when you achieve it.", author:"Unknown" },
+{ quote:"Dream it. Wish it. Do it.", author:"Unknown" },
+{ quote:"Success is the sum of small efforts repeated day in and day out.", author:"Robert Collier" },
+{ quote:"Never stop learning.", author:"Unknown" },
+{ quote:"Be fearless in the pursuit of what sets your soul on fire.", author:"Jennifer Lee" },
+{ quote:"Progress, not perfection.", author:"Unknown" },
+{ quote:"Success starts with self-discipline.", author:"Unknown" },
+{ quote:"Turn your wounds into wisdom.", author:"Oprah Winfrey" },
+{ quote:"You become what you believe.", author:"Oprah Winfrey" },
+
+{ quote:"If opportunity doesn’t knock, build a door.", author:"Milton Berle" },
+{ quote:"Don’t wish for it. Work for it.", author:"Unknown" },
+{ quote:"Energy and persistence conquer all things.", author:"Benjamin Franklin" },
+{ quote:"The best way out is always through.", author:"Robert Frost" },
+{ quote:"Motivation gets you started. Habit keeps you going.", author:"Jim Ryun" },
+{ quote:"Success is earned, not given.", author:"Unknown" },
+{ quote:"Keep your eyes on the stars and your feet on the ground.", author:"Theodore Roosevelt" },
+{ quote:"One day or day one. You decide.", author:"Unknown" },
+{ quote:"If it matters to you, you’ll find a way.", author:"Charlie Gilkey" },
+{ quote:"Winners are not afraid of losing.", author:"Robert Kiyosaki" },
+
+{ quote:"Your future is created by what you do today, not tomorrow.", author:"Robert Kiyosaki" },
+{ quote:"Start where you are. Use what you have. Do what you can.", author:"Arthur Ashe" },
+{ quote:"Success is getting what you want. Happiness is wanting what you get.", author:"Dale Carnegie" },
+{ quote:"The difference between ordinary and extraordinary is that little extra.", author:"Jimmy Johnson" },
+{ quote:"Be so good they can’t ignore you.", author:"Steve Martin" },
+{ quote:"Failure is success in progress.", author:"Albert Einstein" },
+{ quote:"The only limit to our realization of tomorrow is our doubts of today.", author:"Franklin D. Roosevelt" },
+{ quote:"You are one decision away from a completely different life.", author:"Unknown" },
+{ quote:"Every accomplishment starts with the decision to try.", author:"John F. Kennedy" },
+{ quote:"Success is built on consistency.", author:"Unknown" },
+
+{ quote:"The best view comes after the hardest climb.", author:"Unknown" },
+{ quote:"Great things take time.", author:"Unknown" },
+{ quote:"You didn’t come this far to only come this far.", author:"Unknown" },
+{ quote:"The key to success is to focus on goals, not obstacles.", author:"Unknown" },
+{ quote:"Your only competition is who you were yesterday.", author:"Unknown" },
+{ quote:"Make today count.", author:"Unknown" },
+{ quote:"Stay positive, work hard, make it happen.", author:"Unknown" },
+{ quote:"Nothing worth having comes easy.", author:"Unknown" },
+{ quote:"Be addicted to bettering yourself.", author:"Unknown" },
+{ quote:"Consistency creates confidence.", author:"Unknown" },
+
+{ quote:"Success begins with self-belief.", author:"Unknown" },
+{ quote:"You can do hard things.", author:"Unknown" },
+{ quote:"The grind may be tough, but the results are worth it.", author:"Unknown" },
+{ quote:"Keep moving forward.", author:"Walt Disney" },
+{ quote:"Your habits shape your future.", author:"Jack Canfield" },
+{ quote:"Every day is a second chance.", author:"Unknown" },
+{ quote:"Fear regrets more than failure.", author:"Taryn Rose" },
+{ quote:"A winner is a dreamer who never gives up.", author:"Nelson Mandela" },
+{ quote:"Don’t count the days. Make the days count.", author:"Muhammad Ali" },
+{ quote:"Success is not for the lazy.", author:"Unknown" },
+
+{ quote:"Believe in yourself and all that you are.", author:"Christian D. Larson" },
+{ quote:"You are stronger than you think.", author:"Unknown" },
+{ quote:"Keep showing up.", author:"Unknown" },
+{ quote:"The harder the battle, the sweeter the victory.", author:"Les Brown" },
+{ quote:"Success is a journey, not a destination.", author:"Arthur Ashe" },
+{ quote:"You don’t need motivation to start. You need discipline.", author:"Unknown" },
+{ quote:"Never let small minds convince you your dreams are too big.", author:"Unknown" },
+{ quote:"Your effort today builds your success tomorrow.", author:"Unknown" },
+{ quote:"Every master was once a disaster.", author:"T. Harv Eker" },
+{ quote:"Keep learning. Keep growing. Keep going.", author:"Unknown" }
+
 ];
 
-setInterval(()=>{
-  const q = quotes[Math.floor(Math.random()*quotes.length)];
-  alert("💡 " + q);
-},1800000);
+function showQuote(){
 
+    const random = quotes[Math.floor(Math.random() * quotes.length)];
+
+    document.getElementById("quoteText").textContent = `"${random.quote}"`;
+    document.getElementById("quoteAuthor").textContent = "— " + random.author;
+}
+
+showQuote();
+
+setInterval(showQuote, 120000);
+
+// ========================================================
 // ================= TIMER SYSTEM (UPGRADED) =================
 // ================= TIMER SYSTEM (UPGRADED) =================
 
