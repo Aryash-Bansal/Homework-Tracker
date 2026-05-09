@@ -185,21 +185,34 @@ setInterval(()=>{
 },1800000);
 
 // ================= TIMER SYSTEM (UPGRADED) =================
-function playBeep(){
-  const ctx = new (window.AudioContext || window.webkitAudioContext)();
-  const oscillator = ctx.createOscillator();
-  const gain = ctx.createGain();
+let alarmInterval = null;
 
-  oscillator.type = "sine";
-  oscillator.frequency.setValueAtTime(800, ctx.currentTime);
+function startAlarm() {
+  if (alarmInterval) return;
 
-  gain.gain.setValueAtTime(0.1, ctx.currentTime);
+  alarmInterval = setInterval(() => {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
 
-  oscillator.connect(gain);
-  gain.connect(ctx.destination);
+    const oscillator = ctx.createOscillator();
+    const gain = ctx.createGain();
 
-  oscillator.start();
-  oscillator.stop(ctx.currentTime + 0.2);
+    oscillator.type = "square";
+    oscillator.frequency.setValueAtTime(1000, ctx.currentTime);
+
+    gain.gain.setValueAtTime(0.25, ctx.currentTime);
+
+    oscillator.connect(gain);
+    gain.connect(ctx.destination);
+
+    oscillator.start();
+
+    oscillator.stop(ctx.currentTime + 0.4);
+  }, 700);
+}
+
+function stopAlarm() {
+  clearInterval(alarmInterval);
+  alarmInterval = null;
 }
     
     let timers = [];
@@ -279,7 +292,7 @@ function renderTimers() {
     }
       // trigger sound when finished (only once)
 if (left === 0 && !t.fired) {
-  playBeep();
+  startAlarm();
   t.fired = true;
 }
 
@@ -304,6 +317,7 @@ if (left === 0 && !t.fired) {
         }
         <button onclick="restartTimer(${t.id})">🔄 Restart</button>
         <button onclick="deleteTimer(${t.id})">❌ Delete</button>
+        <button onclick="stopAlarm()">🔕 Stop Alarm</button>
       </div>
     `;
 
