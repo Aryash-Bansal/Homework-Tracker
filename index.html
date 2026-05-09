@@ -158,7 +158,7 @@
 
 <div id="trackerScreen">
    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; width:95%; max-width:650px; margin-left:auto; margin-right:auto;">
-    <span id="userInfo"></span>
+    <span id="userInfo" style="color:#4CAF50; font-weight:bold;"></span>
     <button id="logoutBtn">Logout</button>
 </div>
 
@@ -209,7 +209,7 @@
         </select>
 
         <div>
-            <label style="font-size:12px;">Submission Date</label><br>
+            <label style="font-size:12px; color:#4CAF50; font-weight:bold;">Submission Date</label><br>
             <input type="date" id="dateInput">
         </div>
 
@@ -404,7 +404,10 @@ const quotes = [
 { quote:"Never let small minds convince you your dreams are too big.", author:"Unknown" },
 { quote:"Your effort today builds your success tomorrow.", author:"Unknown" },
 { quote:"Every master was once a disaster.", author:"T. Harv Eker" },
-{ quote:"Keep learning. Keep growing. Keep going.", author:"Unknown" }
+{ quote:"Keep learning. Keep growing. Keep going.", author:"Unknown" },
+{ quote:"Sometimes the universe quits back on quitters.", author:"Aryash Bansal" }
+   
+    
 
 ];
 
@@ -752,7 +755,7 @@ div.innerHTML=`
 `;
         if(hw.completed){
     div.style.opacity = "0.5";
-    div.style.filter = "grayscale(60%)";
+    div.style.filter = "grayscale(25%)";
 }
         list.appendChild(div);
     });
