@@ -214,7 +214,8 @@ function startAlarm() {
   }, 700);
 }
 
-window.stopAlarm = function() {
+window.stopAlarm = function(id) {
+
   if (alarmInterval) {
     clearInterval(alarmInterval);
     alarmInterval = null;
@@ -224,8 +225,10 @@ window.stopAlarm = function() {
     audioCtx.close();
     audioCtx = null;
   }
-}
 
+  // remove finished timer
+  timers = timers.filter(t => t.id !== id);
+}
 let timers = [];
 
 // ADD TIMER
@@ -347,7 +350,7 @@ function renderTimers() {
           left === 0
           ? `
             <button onclick="restartTimer(${t.id})">🔄 Restart</button>
-            <button onclick="stopAlarm()">🔕 Stop Alarm</button>
+            <button onclick="stopAlarm(${t.id})">🔕 Stop Alarm</button>
           `
           : `
             ${
