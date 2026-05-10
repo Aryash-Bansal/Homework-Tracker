@@ -201,22 +201,33 @@
     <div id="quoteAuthor"></div>
 </div>
 
-<div style="
-    width:fit-content;
-    margin:15px auto;
-    background:rgba(255,255,255,0.18);
-    padding:10px 12px;
-    border-radius:18px;
-    backdrop-filter:blur(8px);
-    box-shadow:0 6px 18px rgba(0,0,0,0.2);
-">
+<div style="width:fit-content; margin:15px auto;">
+
+<button
+    class="small-btn"
+    onclick="toggleSpotify()"
+    id="spotifyToggleBtn">
+    Show Spotify 
+</button>
+
+<div
+    id="spotifyBox"
+    style="
+        display:none;
+        margin-top:12px;
+        background:rgba(255,255,255,0.18);
+        padding:10px 12px;
+        border-radius:18px;
+        backdrop-filter:blur(8px);
+        box-shadow:0 6px 18px rgba(0,0,0,0.2);
+    ">
 
 <iframe
     style="border-radius:12px; display:block;"
     src="https://open.spotify.com/embed/playlist/5Mo8xgKEOw10X5sEfEgFXE?utm_source=generator&theme=0"
     width="800"
     height="400"
-    frameBorder="0"
+    frameborder="0"
     allowfullscreen=""
     allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
     loading="lazy">
@@ -235,6 +246,8 @@ style="
 ">
     Open Spotify <i class="fa-solid fa-arrow-up-right-from-square"></i>
 </a>
+
+</div>
 
 </div>
 
@@ -909,6 +922,28 @@ if ("serviceWorker" in navigator) {
     });
 
 }
+
+
+
+    window.toggleSpotify = function(){
+
+    const box = document.getElementById("spotifyBox");
+    const btn = document.getElementById("spotifyToggleBtn");
+
+    if(box.style.display === "none"){
+
+        box.style.display = "block";
+        btn.textContent = "Hide Spotify";
+
+    }else{
+
+        box.style.display = "none";
+        btn.textContent = "Show Spotify";
+
+    }
+}
+
+    
 </script>
 
 </body>
