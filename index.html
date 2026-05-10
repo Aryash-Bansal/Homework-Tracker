@@ -101,13 +101,13 @@
         .progress-bar { height: 20px; width: 0%; background: #4CAF50; transition: width 0.4s ease; }
         #allDone { font-size: 40px; font-weight: bold; color: green; display: none; margin-top: 20px; }
 
-   .small-btn {
+      .small-btn {
     padding: 10px 18px;
     font-size: 14px;
     cursor: pointer;
     border: none;
     border-radius: 999px;
-    background: black;
+    background: #4CAF50;
     color: white;
     font-weight: bold;
     transition: 0.2s ease;
@@ -115,7 +115,7 @@
 
 .small-btn:hover {
     transform: scale(1.05);
-    background: #222;
+    background: #43a047;
 }
 
 .small-btn:active {
@@ -147,6 +147,11 @@
             .actions { align-self: flex-end; }
             #allDone { font-size: 28px; }
         }
+
+        #spotifyToggleBtn:hover{
+    background:#222 !important;
+}
+        
     </style>
 </head>
 <body>
@@ -206,8 +211,10 @@
 <button
     class="small-btn"
     onclick="toggleSpotify()"
-    id="spotifyToggleBtn">
-    Show Spotify 
+    id="spotifyToggleBtn"
+    style="background:black;">
+
+    Show Spotify
 </button>
 
 <div
